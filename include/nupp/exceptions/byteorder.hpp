@@ -35,7 +35,7 @@ public:
         _x = hton(rhs);
         return *this;
     }
-    T operator() () const {
+    operator T() const {
         return ntoh(_x);
     }
     T raw() const {

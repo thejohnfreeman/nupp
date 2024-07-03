@@ -25,6 +25,16 @@ public:
      */
     icmp_v4(uint8_t type, uint8_t code);
 
+    socket_v4& socket() {
+        return *this;
+    }
+    socket_v4 const& socket() const {
+        return *this;
+    }
+
+    proxy<uint16_t const> id() const;
+    proxy<uint16_t> id();
+
     proxy<uint16_t const> seq() const;
     proxy<uint16_t> seq();
 

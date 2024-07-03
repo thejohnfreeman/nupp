@@ -16,6 +16,14 @@ icmp_v4 icmp_v4::echo() {
     return icmp_v4(/*type=*/ICMP_ECHO, /*code=*/0);
 }
 
+proxy<uint16_t const> icmp_v4::id() const {
+    return message().icmp_id;
+}
+
+proxy<uint16_t> icmp_v4::id() {
+    return message().icmp_id;
+}
+
 proxy<uint16_t const> icmp_v4::seq() const {
     return message().icmp_seq;
 }

@@ -38,7 +38,8 @@
     {
       "name": "ping",
       "links": [
-        "${PROJECT_NAME}.imports.main"
+        "${PROJECT_NAME}.imports.main",
+        "${PROJECT_NAME}.libraries.nupp"
       ]
     }
   ]
