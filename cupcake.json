@@ -1,0 +1,45 @@
+{
+  "project": {
+    "name": "nupp",
+    "version": "0.1.0"
+  },
+  "libraries": [
+    {
+      "name": "nupp",
+      "links": [
+        "${PROJECT_NAME}.imports.main"
+      ]
+    }
+  ],
+  "imports": [
+    {
+      "name": "doctest",
+      "version": "2.4.8",
+      "reference": "doctest/2.4.8",
+      "file": "doctest",
+      "targets": [
+        "doctest::doctest"
+      ],
+      "groups": [
+        "test"
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "name": "nupp",
+      "links": [
+        "${PROJECT_NAME}.imports.test",
+        "nupp.library"
+      ]
+    }
+  ],
+  "executables": [
+    {
+      "name": "ping",
+      "links": [
+        "${PROJECT_NAME}.imports.main"
+      ]
+    }
+  ]
+}

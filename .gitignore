@@ -1,0 +1,4 @@
+/.cupcake.toml
+/.build/
+/.install/
+/CMakeUserPresets.json
