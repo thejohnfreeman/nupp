@@ -19,16 +19,15 @@ socket_v4::~socket_v4() {
     close(_fd);
 }
 
-socket_v4 socket_v4::make(int type, int protocol) {
-    int fd = socket(AF_INET, type, protocol);
-    if (fd == -1) {
+socket_v4::socket_v4(int type, int protocol) {
+    _fd = socket(AF_INET, type, protocol);
+    if (_fd == -1) {
         throw std::system_error(errno, std::system_category());
     }
-    return socket_v4(fd);
 }
 
 socket_v4 socket_v4::udp() {
-    return make(SOCK_DGRAM, IPPROTO_UDP);
+    return socket_v4(SOCK_DGRAM, IPPROTO_UDP);
 }
 
 }
