@@ -27,7 +27,7 @@ socket_v4::socket_v4(int type, int protocol) {
 }
 
 socket_v4 socket_v4::udp() {
-    return socket_v4(SOCK_DGRAM, IPPROTO_UDP);
+    return socket_v4(/*type=*/SOCK_DGRAM, /*protocol=*/IPPROTO_UDP);
 }
 
 }

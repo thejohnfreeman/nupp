@@ -2,9 +2,6 @@
 
 #include <nupp/exceptions/socket.hpp>
 
-#include <sys/socket.h>
-#include <netinet/ip.h>
-
 TEST_SUITE_BEGIN("socket_v4");
 
 TEST_CASE("udp()") {
