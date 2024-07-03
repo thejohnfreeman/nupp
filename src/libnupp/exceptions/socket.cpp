@@ -26,12 +26,8 @@ void socket_v4::bind(address_v4 const& address) {
   }
 }
 
-socket_v4::option socket_v4::opt(int level, int name) {
-    return socket_v4::option(*this, level, name);
-}
-
-socket_v4::option socket_v4::ttl() {
-    return opt(/*level=*/IPPROTO_IP, /*name=*/IP_TTL);
+socket_v4::option<uint8_t> socket_v4::ttl() {
+    return opt<uint8_t>(/*level=*/IPPROTO_IP, /*name=*/IP_TTL);
 }
 
 socket_v4 socket_v4::udp() {
