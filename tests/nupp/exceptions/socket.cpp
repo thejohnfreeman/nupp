@@ -7,10 +7,10 @@
 
 TEST_SUITE_BEGIN("socket_v4");
 
-TEST_CASE("make_socket_v4()") {
+TEST_CASE("udp()") {
     using namespace nupp::exceptions;
-    auto socket = make_socket_v4(SOCK_DGRAM, IPPROTO_UDP);
-    socket.bind(INADDR_ANY);
+    auto socket = socket_v4::udp();
+    socket.bind(address_v4::any());
     CHECK(true);
 }
 

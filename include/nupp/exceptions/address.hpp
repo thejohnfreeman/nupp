@@ -5,6 +5,7 @@
 
 #include <sys/socket.h>
 #include <netdb.h>
+#include <stdint.h> // uint32_t
 
 #include <system_error>
 #include <type_traits>
@@ -12,7 +13,21 @@
 namespace nupp {
 namespace exceptions {
 
-using address_v4 = struct sockaddr_in;
+class NUPP_EXPORT address_v4 : public sockaddr_in {
+public:
+    address_v4();
+    address_v4& operator= (sockaddr const& rhs);
+
+    /**
+     * @param address 32-bit address in network byte order
+     */
+    static address_v4 from(uint32_t addr32);
+    /**
+     * @throws std::system_error
+     */
+    static address_v4 of(char const* hostname);
+    static address_v4 any();
+};
 
 enum class NUPP_EXPORT address_err {
     ADDRFAMILY = EAI_ADDRFAMILY,
@@ -27,11 +42,6 @@ enum class NUPP_EXPORT address_err {
     SOCKTYPE = EAI_SOCKTYPE,
     SYSTEM = EAI_SYSTEM,
 };
-
-/**
- * @throws std::system_error
- */
-NUPP_EXPORT address_v4 resolve_v4(char const* hostname);
 
 }
 }

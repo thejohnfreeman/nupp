@@ -2,8 +2,8 @@
 
 #include <nupp/exceptions/address.hpp>
 
-TEST_CASE("resolve_v4()") {
+TEST_CASE("of()") {
     using namespace nupp::exceptions;
-    auto addr = resolve_v4("google.com");
+    auto addr = address_v4::of("google.com");
     CHECK(true);
 }

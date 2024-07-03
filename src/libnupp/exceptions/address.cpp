@@ -1,6 +1,8 @@
 #include <nupp/exceptions/address.hpp>
 
 #include <netdb.h>
+#include <netinet/in.h>
+#include <stdint.h> // uint32_t
 
 #include <cassert>
 #include <cstring>
@@ -22,16 +24,36 @@ struct address_error_category : public std::error_category {
 
 address_error_category const the_address_error_category;
 
-address_v4 resolve_v4(char const* hostname) {
-    address_v4 addr;
+address_v4::address_v4() {
+  std::memset(this, 0, sizeof(*this));
+  this->sin_family = AF_INET;
+}
+
+address_v4& address_v4::operator= (sockaddr const& rhs) {
+    std::memcpy(this, &rhs, sizeof(sockaddr_in));
+    return *this;
+}
+
+address_v4 address_v4::from(uint32_t addr32) {
+    address_v4 address;
+    address.sin_addr.s_addr = addr32;
+    return address;
+}
+
+address_v4 address_v4::any() {
+    return from(INADDR_ANY);
+}
+
+address_v4 address_v4::of(char const* hostname) {
     struct addrinfo* res = NULL;
     int error = getaddrinfo(hostname, /*serv=*/NULL, /*hints=*/NULL, &res);
     if (error) {
         throw std::system_error(error, the_address_error_category);
     }
     assert(res);
-    std::memcpy(&addr, res->ai_addr, sizeof(addr));
-    return addr;
+    address_v4 address;
+    address = *res->ai_addr;
+    return address;
 }
 
 }
