@@ -3,60 +3,53 @@
 
 #include <nupp/exceptions/address.hpp>
 #include <nupp/exceptions/byteorder.hpp>
+#include <nupp/exceptions/ip.hpp>
 #include <nupp/exceptions/socket.hpp>
 #include <nupp/export.hpp>
 
-#include <netinet/ip_icmp.h>
 #include <stdint.h>
-#include <sys/types.h>
-
-#include <array>
 
 namespace nupp {
 namespace exceptions {
+namespace icmp {
 
 /**
- * @see https://android.googlesource.com/platform/bionic/+/master/libc/include/netinet/ip_icmp.h#65
+ * @see https://datatracker.ietf.org/doc/html/rfc792
  */
-class NUPP_EXPORT icmp_v4 : private socket_v4 {
-private:
-    // TODO: Fix alignment.
-    std::array<uint8_t, ICMP_MINLEN> _buffer;
+struct NUPP_EXPORT message {
+    uint8_t _type;
+    uint8_t _code;
+    uint16_t _checksum = 0;
+};
 
-public:
-    /**
-     * @param type e.g. `ICMP_ECHO`.
-     * @param code ???
-     */
-    icmp_v4(uint8_t type, uint8_t code);
+struct NUPP_EXPORT echo_message : public message {
+    uint16_t _identifier = 0;
+    uint16_t _sequence = 0;
 
-    socket_v4& socket() {
-        return *this;
+    echo_message();
+
+    proxy<uint16_t> identifier() {
+        return _identifier;
     }
-    socket_v4 const& socket() const {
-        return *this;
+    proxy<uint16_t const> identifier() const {
+        return _identifier;
     }
 
-    proxy<uint16_t const> id() const;
-    proxy<uint16_t> id();
-
-    proxy<uint16_t const> seq() const;
-    proxy<uint16_t> seq();
-
-    ssize_t send(address_v4 const& address);
-
-    static icmp_v4 echo();
-
-private:
-    ::icmp& _message() {
-        // TODO: Does the standard guarantee this is safe?
-        return *reinterpret_cast<::icmp*>(_buffer.data());
+    proxy<uint16_t> sequence() {
+        return _sequence;
     }
-    ::icmp const& _message() const{
-        return *reinterpret_cast<::icmp const*>(_buffer.data());
+    proxy<uint16_t const> sequence() const {
+        return _sequence;
     }
 };
 
+template <typename T>
+void set_checksum(T& message) {
+    message._checksum = 0;
+    message._checksum = ip_checksum(&message, sizeof(T));
+}
+
+}
 }
 }
 

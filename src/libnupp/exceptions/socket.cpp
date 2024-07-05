@@ -43,12 +43,16 @@ ssize_t socket_v4::send_to(
     return sent;
 }
 
-socket_v4 socket_v4::udp() {
-    return socket_v4(/*type=*/SOCK_DGRAM, /*protocol=*/IPPROTO_UDP);
+socket_v4 socket_v4::icmp() {
+    return socket_v4(/*type=*/SOCK_DGRAM, /*protocol=*/IPPROTO_ICMP);
 }
 
 socket_v4 socket_v4::tcp() {
     return socket_v4(/*type=*/SOCK_STREAM, /*protocol=*/IPPROTO_TCP);
+}
+
+socket_v4 socket_v4::udp() {
+    return socket_v4(/*type=*/SOCK_DGRAM, /*protocol=*/IPPROTO_UDP);
 }
 
 }

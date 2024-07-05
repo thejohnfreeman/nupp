@@ -73,8 +73,9 @@ public:
 
     ssize_t send_to(std::span<uint8_t> const& data, address_v4 const& address);
 
-    static socket_v4 udp();
+    static socket_v4 icmp();
     static socket_v4 tcp();
+    static socket_v4 udp();
 
 private:
     socket_v4(int fd) : _fd(fd) {}
