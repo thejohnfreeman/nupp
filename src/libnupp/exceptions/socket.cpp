@@ -30,8 +30,25 @@ socket_v4::option<uint8_t> socket_v4::ttl() {
     return opt<uint8_t>(/*level=*/IPPROTO_IP, /*name=*/IP_TTL);
 }
 
+ssize_t socket_v4::send_to(
+    std::span<uint8_t> const& data, address_v4 const& address
+) {
+    auto sent = ::sendto(
+        _fd, data.data(), data.size(), /*flags=*/0,
+        (sockaddr*)(&address), sizeof(address)
+    );
+    if (-1 == sent) {
+        throw std::system_error(errno, std::system_category());
+    }
+    return sent;
+}
+
 socket_v4 socket_v4::udp() {
     return socket_v4(/*type=*/SOCK_DGRAM, /*protocol=*/IPPROTO_UDP);
+}
+
+socket_v4 socket_v4::tcp() {
+    return socket_v4(/*type=*/SOCK_STREAM, /*protocol=*/IPPROTO_TCP);
 }
 
 }

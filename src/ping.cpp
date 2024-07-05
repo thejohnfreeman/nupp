@@ -46,7 +46,7 @@ void onsig(int sig) {
 const char* usage =
 "usage: ping host";
 
-void ping(address_v4 const& dest) {
+void ping(icmp_v4& icmp, address_v4 const& dest) {
   /* Prepare to receive. We want minimal processing between send and
    * receive. */
   struct icmp* req = (struct icmp*)sock.buffer;
@@ -59,11 +59,11 @@ void ping(address_v4 const& dest) {
   gettimeofday(&start, /*timezone=*/NULL);
 
   /* Send. */
-  ssize_t sendbytes = jficmp_send(&sock, dest);
+  auto sendbytes = icmp.send(dest);
   ++nsent;
 
   /* Print. */
-  if (req->icmp_seq == 0) {
+  if (icmp.seq() == 0) {
     u8_t* destocts = (u8_t*)&dest->sin_addr.s_addr;
     printf("PING %s (%d.%d.%d.%d): %ld data bytes\n",
         destname,
@@ -125,11 +125,10 @@ int main(int argc, const char** argv) {
   icmp.seq() = 0;
 
   while (1) {
-    ping(&dest);
+    ping(icmp, dest);
     sleep(1);
     icmp.seq() = icmp.seq() + 1;
   }
 
   return EXIT_SUCCESS;
 }
-

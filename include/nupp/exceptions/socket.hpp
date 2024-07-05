@@ -1,6 +1,7 @@
 #ifndef NUPP_EXCEPTIONS_SOCKET_HPP
 #define NUPP_EXCEPTIONS_SOCKET_HPP
 
+#include <cstdint>
 #include <nupp/exceptions/address.hpp>
 #include <nupp/export.hpp>
 
@@ -8,11 +9,36 @@
 #include <sys/socket.h>
 
 #include <cassert>
+#include <span>
 #include <system_error>
 
 namespace nupp {
 namespace exceptions {
 
+/**
+ * An IPv4 socket.
+ *
+ * The constructor takes the same parameters as `socket()`,
+ * except that the address family is fixed to IPv4.
+ *
+ * There are static factory methods for common socket types,
+ * i.e. `udp()` and `tcp()`.
+ *
+ * Options can be read and written with the `opt()` member function.
+ * It returns a reference proxy with an assignment operator (for set)
+ * and a cast operator (for get).
+ * Known options have named shortcut methods, e.g. `ttl()`.
+ *
+ * Remaining methods correspond to socket functions:
+ *
+ * - `bind()`
+ * - `listen()`
+ * - `accept()`
+ * - `send()`
+ * - `receive()`
+ * - `send_to()`
+ * - `receive_from()`
+ */
 class NUPP_EXPORT socket_v4 {
 private:
     int _fd;
@@ -45,7 +71,10 @@ public:
 
     option<uint8_t> ttl();
 
+    ssize_t send_to(std::span<uint8_t> const& data, address_v4 const& address);
+
     static socket_v4 udp();
+    static socket_v4 tcp();
 
 private:
     socket_v4(int fd) : _fd(fd) {}
