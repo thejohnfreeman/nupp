@@ -55,6 +55,10 @@ public:
     socket_v4(int type, int protocol);
     ~socket_v4();
 
+    int fd() const {
+        return _fd;
+    }
+
     /**
      * @throws std::system_error
      */
@@ -73,6 +77,12 @@ public:
 
     ssize_t send_to(std::span<uint8_t> const& data, address_v4 const& address);
 
+    template <typename T>
+    ssize_t send_to(T& data, address_v4 const& address) {
+        before_send(data);
+        return send_to({&data, sizeof(T)}, address);
+    }
+
     static socket_v4 icmp();
     static socket_v4 tcp();
     static socket_v4 udp();
@@ -83,6 +93,13 @@ private:
     template <typename T>
     friend class option;
 };
+
+template <typename T>
+void before_send(T& data) {}
+
+// This must be a free function to permit third-party overloads.
+template <typename T>
+T recv_from(socket_v4 const& socket, address_v4& address);
 
 template <typename T>
 class NUPP_EXPORT socket_v4::option {
@@ -104,7 +121,7 @@ public:
         return *this;
     }
 
-    operator T () const {
+    T value() const {
         T x;
         socklen_t length = sizeof(T);
         if (-1 == getsockopt(_socket._fd, _level, _name, &x, &length)) {
@@ -112,6 +129,10 @@ public:
         }
         assert(length == sizeof(T));
         return x;
+    }
+
+    operator T () const {
+        return value();
     }
 };
 
