@@ -5,12 +5,8 @@
 #include <cstdint>
 #include <iostream>
 
-template <typename T>
-void print(char const* name) {
-    fmt::println("{:16} {:4} {:4} \"{}\"", name, sizeof(T), alignof(T), T());
-}
-
-#define PRINT(T) print<T>(#T)
+#define PRINT(T) \
+    fmt::println("{:16} {:4} {:4}", #T, sizeof(T), alignof(T))
 
 int main(int argc, const char** argv) {
     PRINT(std::uint64_t);

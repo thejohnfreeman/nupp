@@ -1,8 +1,9 @@
 #include <nupp/exceptions/address.hpp>
 
+#include <fmt/format.h>
+
 #include <netdb.h>
 #include <netinet/in.h>
-#include <stdint.h> // uint32_t
 
 #include <cassert>
 #include <cstring>
@@ -34,7 +35,7 @@ address_v4& address_v4::operator= (sockaddr const& rhs) {
     return *this;
 }
 
-address_v4 address_v4::from(uint32_t addr32) {
+address_v4 address_v4::from(std::uint32_t addr32) {
     address_v4 address;
     address.sin_addr.s_addr = addr32;
     return address;

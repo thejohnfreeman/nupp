@@ -3,10 +3,12 @@
 
 #include <nupp/export.hpp>
 
+#include <fmt/format.h>
+
 #include <sys/socket.h>
 #include <netdb.h>
-#include <stdint.h> // uint32_t
 
+#include <cstdint>
 #include <system_error>
 #include <type_traits>
 
@@ -21,13 +23,15 @@ public:
     /**
      * @param address 32-bit address in network byte order
      */
-    static address_v4 from(uint32_t addr32);
+    static address_v4 from(std::uint32_t addr32);
     /**
      * @throws std::system_error
      */
     static address_v4 of(char const* hostname);
     static address_v4 any();
 };
+
+static_assert(sizeof(address_v4) == sizeof(sockaddr_in));
 
 enum class NUPP_EXPORT address_err {
     ADDRFAMILY = EAI_ADDRFAMILY,
@@ -42,6 +46,11 @@ enum class NUPP_EXPORT address_err {
     SOCKTYPE = EAI_SOCKTYPE,
     SYSTEM = EAI_SYSTEM,
 };
+
+inline auto format_as(address_v4 const& address) {
+    uint8_t const* octs = reinterpret_cast<uint8_t const*>(&address.sin_addr.s_addr);
+    return fmt::format("{}.{}.{}.{}", octs[0], octs[1], octs[2], octs[3]);
+}
 
 }
 }
