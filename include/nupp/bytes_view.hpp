@@ -10,16 +10,9 @@
 #include <ostream>
 #include <span>
 
+namespace nupp {
+
 using bytes_view = std::span<std::byte const, std::dynamic_extent>;
-
-namespace std {
-
-NUPP_EXPORT std::ostream& operator<< (std::ostream& out, bytes_view const bv);
-
-}
-
-template <>
-struct NUPP_EXPORT fmt::formatter<bytes_view> : public ostream_formatter {};
 
 template <typename T>
 bytes_view as_bytes(T const& t) {
@@ -31,5 +24,16 @@ bool is_aligned(T const& t) {
     std::uintptr_t p = reinterpret_cast<std::uintptr_t>(&t);
     return p % alignof(T) == 0;
 }
+
+}
+
+namespace std {
+
+NUPP_EXPORT std::ostream& operator<< (std::ostream& out, nupp::bytes_view const bv);
+
+}
+
+template <>
+struct NUPP_EXPORT fmt::formatter<nupp::bytes_view> : public ostream_formatter {};
 
 #endif

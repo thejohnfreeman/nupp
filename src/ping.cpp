@@ -112,9 +112,9 @@ int main(int argc, const char** argv) {
   destname = argv[1];
 
   auto dest = address_v4::of(destname);
-  assert(is_aligned(dest));
+  assert(nupp::is_aligned(dest));
   fmt::println("{}", dest);
-  fmt::println("{}", as_bytes(dest));
+  fmt::println("{}", nupp::as_bytes(dest));
 
   auto socket = socket_v4::icmp();
   socket.ttl() = 255;

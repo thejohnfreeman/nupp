@@ -29,7 +29,7 @@ static char const* const NIBBLES[] = {
 
 namespace std {
 
-std::ostream& operator<< (std::ostream& out, bytes_view const bv) {
+std::ostream& operator<< (std::ostream& out, nupp::bytes_view const bv) {
     // TODO: Parameterize ncols, left shift
     constexpr std::size_t const NCOLS = 4;
     auto addr = reinterpret_cast<std::uintptr_t>(bv.data());
