@@ -23,6 +23,18 @@
       "groups": [
         "test"
       ]
+    },
+    {
+      "name": "fmt",
+      "version": "11.0.0",
+      "reference": "fmt/11.0.0",
+      "file": "fmt",
+      "targets": [
+        "fmt::fmt"
+      ],
+      "groups": [
+        "main"
+      ]
     }
   ],
   "tests": [
@@ -37,6 +49,13 @@
   "executables": [
     {
       "name": "ping",
+      "links": [
+        "${PROJECT_NAME}.imports.main",
+        "${PROJECT_NAME}.libraries.nupp"
+      ]
+    },
+    {
+      "name": "print",
       "links": [
         "${PROJECT_NAME}.imports.main",
         "${PROJECT_NAME}.libraries.nupp"
