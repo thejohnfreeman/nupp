@@ -80,10 +80,10 @@ public:
      */
     void connect(address_v4 const& address);
 
-    ssize_t send_to(bytes_view const& data, address_v4 const& address);
+    std::size_t send_to(bytes_view const& data, address_v4 const& address);
 
     template <typename T>
-    ssize_t send_to(T& data, address_v4 const& address) {
+    std::size_t send_to(T& data, address_v4 const& address) {
         before_send(data);
         return send_to({&data, sizeof(T)}, address);
     }

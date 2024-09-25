@@ -7,25 +7,25 @@
 
 #include <bit>
 #include <cassert>
+#include <concepts>
 #include <cstdint>
-#include <span>
 
 namespace nupp {
 namespace exceptions {
 
-inline uint16_t ntoh(uint16_t x) {
+inline std::uint16_t ntoh(std::uint16_t x) {
     return ntohs(x);
 }
 
-inline uint32_t ntoh(uint32_t x) {
+inline std::uint32_t ntoh(std::uint32_t x) {
     return ntohl(x);
 }
 
-inline uint16_t hton(uint16_t x) {
+inline std::uint16_t hton(std::uint16_t x) {
     return htons(x);
 }
 
-inline uint32_t hton(uint32_t x) {
+inline std::uint32_t hton(std::uint32_t x) {
     return htonl(x);
 }
 
@@ -41,12 +41,17 @@ private:
 public:
     big_endian() : _value(0) {}
     big_endian(T rhs) : _value(hton(rhs)) {}
-    big_endian& operator= (T rhs) {
+    template <typename U>
+    requires std::integral<U> && (sizeof(U) <= sizeof(T))
+    big_endian& operator= (U rhs) {
         _value = hton(rhs);
         return *this;
     }
-    operator T() const {
+    T native() const {
         return ntoh(_value);
+    }
+    operator T() const {
+        return native();
     }
     T raw() const {
         return _value;
@@ -56,10 +61,12 @@ public:
     }
 };
 
-using beu16_t = big_endian<uint16_t>;
-static_assert(sizeof(beu16_t) == sizeof(uint16_t));
-using beu32_t = big_endian<uint32_t>;
-static_assert(sizeof(beu32_t) == sizeof(uint32_t));
+using beu16_t = big_endian<std::uint16_t>;
+static_assert(sizeof(beu16_t) == sizeof(std::uint16_t));
+using beu32_t = big_endian<std::uint32_t>;
+static_assert(sizeof(beu32_t) == sizeof(std::uint32_t));
+
+// TODO: format_as(big_endian)
 
 /**
  * A proxy for network byte order fields.
@@ -73,12 +80,18 @@ private:
     T& _x;
 public:
     proxy(T& x) : _x(x) {}
-    proxy& operator= (T rhs) {
+    // Forbid narrowing conversions.
+    template <typename U>
+    requires std::integral<U> && (sizeof(U) <= sizeof(T))
+    proxy& operator= (U rhs) {
         _x = hton(rhs);
         return *this;
     }
-    operator T() const {
+    T native() const {
         return ntoh(_x);
+    }
+    operator T() const {
+        return native();
     }
     T raw() const {
         return _x;

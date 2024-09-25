@@ -112,17 +112,11 @@ int main(int argc, const char** argv) {
   destname = argv[1];
 
   auto dest = address_v4::of(destname);
-  assert(nupp::is_aligned(dest));
-  fmt::println("{}", dest);
-  fmt::println("{}", nupp::as_bytes(dest));
 
   auto socket = socket_v4::icmp();
   socket.ttl() = 255;
-  fmt::println("{}", socket.ttl().value());
 
   socket.bind();
-
-  socket.connect(dest);
 
   // /* Schedule reporting. */
   // struct sigaction act;
@@ -131,15 +125,17 @@ int main(int argc, const char** argv) {
   //   err(errno, "could not schedule reporting");
   // }
 
-  // /* Construct ICMP header. */
-  // auto message = icmp::echo{};
-  // message.identifier() = getpid();
-  // assert(message.sequence() == 0);
+  /* Construct ICMP header. */
+  auto message = icmp::echo{};
+  // Narrowing conversion from 32 to 16 bits.
+  message.identifier = static_cast<std::uint16_t>(getpid());
+  message.sequence = 1;
+  fmt::println("{}", nupp::to_bytes(message));
 
   // while (1) {
   //   ping(socket, message, dest);
   //   sleep(1);
-  //   icmp.sequence() = icmp.sequence() + 1;
+  //   message.sequence += 1;
   // }
 
   return EXIT_SUCCESS;

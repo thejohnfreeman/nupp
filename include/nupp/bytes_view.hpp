@@ -12,16 +12,20 @@
 
 namespace nupp {
 
-using bytes_view = std::span<std::byte const, std::dynamic_extent>;
+using bytes_view = std::span<std::byte const>;
 
 template <typename T>
-bytes_view as_bytes(T const& t) {
-    return bytes_view{reinterpret_cast<std::byte const*>(&t), sizeof(T)};
+bytes_view to_bytes(T const& object) {
+    // Three-point turn around reinterpret_cast.
+    auto p1 = &object;
+    auto p2 = static_cast<void const*>(p1);
+    auto p3 = static_cast<std::byte const*>(p2);
+    return bytes_view{p3, sizeof(T)};
 }
 
 template <typename T>
-bool is_aligned(T const& t) {
-    std::uintptr_t p = reinterpret_cast<std::uintptr_t>(&t);
+bool is_aligned(T const& object) {
+    std::uintptr_t p = reinterpret_cast<std::uintptr_t>(&object);
     return p % alignof(T) == 0;
 }
 

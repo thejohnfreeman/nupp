@@ -28,7 +28,7 @@ void socket_v4::bind(address_v4 const& address) {
 }
 
 void socket_v4::connect(address_v4 const& address) {
-    if (-1 == ::connect(_fd, reinterpret_cast<sockaddr const*>(&address), sizeof(address))) {
+    if (-1 == ::connect(_fd, address.cast(), sizeof(address))) {
         throw std::system_error(errno, std::system_category());
     }
 }
@@ -37,12 +37,12 @@ socket_v4::option<std::uint8_t> socket_v4::ttl() {
     return opt<std::uint8_t>(/*level=*/IPPROTO_IP, /*name=*/IP_TTL);
 }
 
-ssize_t socket_v4::send_to(
+std::size_t socket_v4::send_to(
     bytes_view const& data, address_v4 const& address
 ) {
     auto sent = ::sendto(
         _fd, data.data(), data.size(), /*flags=*/0,
-        (sockaddr*)(&address), sizeof(address)
+        address.cast(), sizeof(address)
     );
     if (-1 == sent) {
         throw std::system_error(errno, std::system_category());

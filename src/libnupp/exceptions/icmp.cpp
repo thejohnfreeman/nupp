@@ -6,7 +6,12 @@ namespace nupp {
 namespace exceptions {
 namespace icmp {
 
-echo_message::echo_message() : message{/*type=*/ICMP_ECHO, /*code=*/0} {}
+echo::echo() : message{/*type=*/ICMP_ECHO, /*code=*/0} {}
+
+void before_send(icmp::message& data) {
+    data.checksum = 0;
+    data.checksum.raw() = ip::checksum(data);
+}
 
 }
 }
