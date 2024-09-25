@@ -27,6 +27,12 @@ void socket_v4::bind(address_v4 const& address) {
     }
 }
 
+void socket_v4::connect(address_v4 const& address) {
+    if (-1 == ::connect(_fd, reinterpret_cast<sockaddr const*>(&address), sizeof(address))) {
+        throw std::system_error(errno, std::system_category());
+    }
+}
+
 socket_v4::option<std::uint8_t> socket_v4::ttl() {
     return opt<std::uint8_t>(/*level=*/IPPROTO_IP, /*name=*/IP_TTL);
 }

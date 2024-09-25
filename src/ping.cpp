@@ -115,11 +115,14 @@ int main(int argc, const char** argv) {
   assert(is_aligned(dest));
   fmt::println("{}", dest);
   fmt::println("{}", as_bytes(dest));
+
   auto socket = socket_v4::icmp();
   socket.ttl() = 255;
   fmt::println("{}", socket.ttl().value());
 
   socket.bind();
+
+  socket.connect(dest);
 
   // /* Schedule reporting. */
   // struct sigaction act;

@@ -60,11 +60,6 @@ public:
     }
 
     /**
-     * @throws std::system_error
-     */
-    void bind(address_v4 const& address = address_v4::any());
-
-    /**
      * @param level e.g. `IPPROTO_IP`.
      * @param name e.g. `IP_TTL`.
      */
@@ -74,6 +69,16 @@ public:
     }
 
     option<std::uint8_t> ttl();
+
+    /**
+     * @throws std::system_error
+     */
+    void bind(address_v4 const& address = address_v4::any());
+
+    /**
+     * @throws std::system_error
+     */
+    void connect(address_v4 const& address);
 
     ssize_t send_to(bytes_view const& data, address_v4 const& address);
 
