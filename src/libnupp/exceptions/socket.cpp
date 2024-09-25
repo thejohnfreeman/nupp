@@ -10,28 +10,29 @@ namespace nupp {
 namespace exceptions {
 
 socket_v4::socket_v4(int type, int protocol) {
-    _fd = socket(AF_INET, type, protocol);
+    _fd = ::socket(AF_INET, type, protocol);
     if (_fd == -1) {
+        // TODO: is this the same as `strerror`?
         throw std::system_error(errno, std::system_category());
     }
 }
 
 socket_v4::~socket_v4() {
-    close(_fd);
+    ::close(_fd);
 }
 
 void socket_v4::bind(address_v4 const& address) {
-  if (-1 == ::bind(_fd, (struct sockaddr*)&address, sizeof(address))) {
-      throw std::system_error(errno, std::system_category());
-  }
+    if (-1 == ::bind(_fd, reinterpret_cast<sockaddr const*>(&address), sizeof(address))) {
+        throw std::system_error(errno, std::system_category());
+    }
 }
 
-socket_v4::option<uint8_t> socket_v4::ttl() {
-    return opt<uint8_t>(/*level=*/IPPROTO_IP, /*name=*/IP_TTL);
+socket_v4::option<std::uint8_t> socket_v4::ttl() {
+    return opt<std::uint8_t>(/*level=*/IPPROTO_IP, /*name=*/IP_TTL);
 }
 
 ssize_t socket_v4::send_to(
-    std::span<uint8_t> const& data, address_v4 const& address
+    bytes_view const& data, address_v4 const& address
 ) {
     auto sent = ::sendto(
         _fd, data.data(), data.size(), /*flags=*/0,

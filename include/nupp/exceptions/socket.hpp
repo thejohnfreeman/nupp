@@ -1,14 +1,14 @@
 #ifndef NUPP_EXCEPTIONS_SOCKET_HPP
 #define NUPP_EXCEPTIONS_SOCKET_HPP
 
-#include <cstdint>
+#include <nupp/bytes_view.hpp>
 #include <nupp/exceptions/address.hpp>
 #include <nupp/export.hpp>
 
-#include <stdint.h> // uint32_t
 #include <sys/socket.h>
 
 #include <cassert>
+#include <cstdint>
 #include <span>
 #include <system_error>
 
@@ -62,7 +62,7 @@ public:
     /**
      * @throws std::system_error
      */
-    void bind(address_v4 const& address);
+    void bind(address_v4 const& address = address_v4::any());
 
     /**
      * @param level e.g. `IPPROTO_IP`.
@@ -73,9 +73,9 @@ public:
         return option<T>(*this, level, name);
     }
 
-    option<uint8_t> ttl();
+    option<std::uint8_t> ttl();
 
-    ssize_t send_to(std::span<uint8_t> const& data, address_v4 const& address);
+    ssize_t send_to(bytes_view const& data, address_v4 const& address);
 
     template <typename T>
     ssize_t send_to(T& data, address_v4 const& address) {

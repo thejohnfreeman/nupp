@@ -119,6 +119,8 @@ int main(int argc, const char** argv) {
   socket.ttl() = 255;
   fmt::println("{}", socket.ttl().value());
 
+  socket.bind();
+
   // /* Schedule reporting. */
   // struct sigaction act;
   // act.sa_handler = &onsig;

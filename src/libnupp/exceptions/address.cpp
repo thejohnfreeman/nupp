@@ -46,14 +46,14 @@ address_v4 address_v4::any() {
 }
 
 address_v4 address_v4::of(char const* hostname) {
-    struct addrinfo* res = NULL;
-    int error = getaddrinfo(hostname, /*serv=*/NULL, /*hints=*/NULL, &res);
-    if (error) {
-        throw std::system_error(error, the_address_error_category);
+    addrinfo* result = nullptr;
+    int errc = ::getaddrinfo(hostname, /*serv=*/nullptr, /*hints=*/nullptr, &result);
+    if (errc) {
+        throw std::system_error(errc, the_address_error_category);
     }
-    assert(res);
+    assert(result);
     address_v4 address;
-    address = *res->ai_addr;
+    address = *result->ai_addr;
     return address;
 }
 

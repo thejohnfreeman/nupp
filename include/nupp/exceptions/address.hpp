@@ -38,7 +38,7 @@ public:
 static_assert(sizeof(address_v4) == sizeof(sockaddr_in));
 
 inline auto format_as(address_v4 const& address) {
-    uint8_t const* octs = reinterpret_cast<uint8_t const*>(&address.sin_addr.s_addr);
+    std::uint8_t const* octs = reinterpret_cast<std::uint8_t const*>(&address.sin_addr.s_addr);
     return fmt::format("{}.{}.{}.{}", octs[0], octs[1], octs[2], octs[3]);
 }
 
