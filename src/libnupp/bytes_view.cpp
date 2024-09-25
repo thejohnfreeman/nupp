@@ -42,7 +42,7 @@ std::ostream& operator<< (std::ostream& out, nupp::bytes_view const bv) {
         ++row;
         // Prefix row with last 4 hexdigits of address.
         auto addr = reinterpret_cast<std::uintptr_t>(&*it);
-        out << fmt::format("{:x} ", addr & 0xFFFF);
+        out << fmt::format("{:04x} ", addr & 0xFFFF);
         for (int j = 0; j < NCOLS; ++j) {
             out << "| ";
             if (it == bv.end()) {

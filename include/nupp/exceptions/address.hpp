@@ -24,7 +24,7 @@ public:
     address_v4();
     address_v4& operator= (sockaddr const& rhs);
 
-    sockaddr const* cast() const {
+    operator sockaddr const* () const {
         return reinterpret_cast<sockaddr const*>(this);
     }
 
