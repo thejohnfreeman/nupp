@@ -63,10 +63,15 @@ public:
 
 using beu16_t = big_endian<std::uint16_t>;
 static_assert(sizeof(beu16_t) == sizeof(std::uint16_t));
+static_assert(alignof(beu16_t) == alignof(std::uint16_t));
 using beu32_t = big_endian<std::uint32_t>;
 static_assert(sizeof(beu32_t) == sizeof(std::uint32_t));
+static_assert(alignof(beu32_t) == alignof(std::uint32_t));
 
-// TODO: format_as(big_endian)
+template <typename T>
+auto format_as(big_endian<T> const& value) {
+    return fmt::to_string(value.native());
+}
 
 /**
  * A proxy for network byte order fields.

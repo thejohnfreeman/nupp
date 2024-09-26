@@ -4,8 +4,6 @@
 
 #include <fmt/base.h>
 
-#include <float.h>      // FLT_MAX
-#include <math.h>       // sqrt
 #include <signal.h>     // sigaction
 #include <unistd.h>     // close
 #include <err.h>        // errno
@@ -14,36 +12,41 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
+#include <mutex>
+#include <condition_variable>
+
 #include <cassert>
+#include <cmath>
+#include <csignal>
+#include <cstdio>
+#include <cstdlib>
+#include <limits>
 
 using namespace nupp::exceptions;
 
 const char* destname;
-u_int nsent   = 0;
-u_int nrecv   = 0;
-float min     = FLT_MAX;
-float max     = 0.0;
-float total   = 0.0;
-float total_2 = 0.0;
+unsigned int nsent  = 0;
+unsigned int nrecv  = 0;
+double min   = std::numeric_limits<double>::max();
+double max   = 0.0;
+double total = 0.0;
+// Sum of squares.
+double sos   = 0.0;
 
-// void report() {
-//   printf("\n--- %s ping statistics ---\n", destname);
-//   printf("%d packets transmitted, %d packets received, %.1f%% packet loss\n",
-//       nsent, nrecv, (nsent - nrecv) / (float)nsent);
-//   float mean   = total / nrecv;
-//   float stddev = sqrt((total_2 / nrecv) - (mean * mean));
-//   printf("round-trip min/avg/max/stddev = %.3f/%.3f/%.3f/%.3f ms\n",
-//       min, mean, max, stddev);
-// }
+void onexit() {
+    fmt::println("\n--- {} ping statistics ---", destname);
+    fmt::println("{} packets transmitted, {} received, {:.1f}% packet loss, time ????ms",
+            nsent, nrecv, static_cast<double>(nsent - nrecv) / nsent);
+    double mean   = total / nrecv;
+    double stddev = std::sqrt((sos / nrecv) - (mean * mean));
+    fmt::println("rtt min/avg/max/mdev = {:.3f}/{:.3f}/{:.3f}/{:.3f} ms",
+            min, mean, max, stddev);
+    std::fflush(nullptr);
+}
 
-// void onsig(int sig) {
-//   if (sig == SIGINT) {
-//     report();
-//     fflush(/*stream=*/NULL);
-//     errno = 0;
-//   }
-//   _exit(errno);
-// }
+void onsignal(int signal) {
+    if (SIGINT == signal) exit(EXIT_SUCCESS);
+}
 
 void ping(
     socket_v4& socket, icmp::echo& message, address_v4 const& dest)
@@ -80,7 +83,7 @@ void ping(
   // if (ms < min) min = ms;
   // if (ms > max) max = ms;
   // total   += ms;
-  // total_2 += ms * ms;
+  // sos += ms * ms;
 
   // /* Verify. */
   // struct ip* resp_ip;
@@ -106,7 +109,7 @@ int main(int argc, const char** argv) {
   /* Parse command line. */
   if (argc != 2) {
       fmt::println("usage: ping host");
-      std::terminate();
+      std::exit(EXIT_FAILURE);
   }
 
   destname = argv[1];
@@ -118,17 +121,17 @@ int main(int argc, const char** argv) {
 
   socket.bind();
 
-  // /* Schedule reporting. */
-  // struct sigaction act;
-  // act.sa_handler = &onsig;
-  // if (-1 == sigaction(SIGINT, &act, /*oact=*/NULL)) {
-  //   err(errno, "could not schedule reporting");
-  // }
+  /* Schedule reporting. */
+  if (SIG_ERR == std::signal(SIGINT, onsignal)) {
+      exit(EXIT_FAILURE);
+  }
+  std::atexit(onexit);
 
   /* Construct ICMP header. */
   auto message = icmp::echo{};
   // Narrowing conversion from 32 to 16 bits.
   message.identifier = static_cast<std::uint16_t>(getpid());
+  fmt::println("{}", message.identifier);
   message.sequence = 1;
   fmt::println("{}", nupp::to_bytes(message));
 

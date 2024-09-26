@@ -6,14 +6,15 @@ TEST_SUITE_BEGIN("icmp");
 
 TEST_CASE("checksum") {
     using namespace nupp::exceptions;
-    auto socket = socket_v4::icmp();
-    socket.ttl() = 255;
-    CHECK(socket.ttl() == 255);
-    auto message = icmp::echo_message{};
+    auto message = icmp::echo{};
     CHECK(message.sequence() == 0);
     message.sequence() = message.sequence() + 1;
     CHECK(message.sequence() == 1);
-    set_checksum(message);
+}
+
+namespace {
+    using namespace nupp::exceptions;
+    static_assert(sizeof(ip::packet<icmp::echo>) == sizeof(ip::header) + 8);
 }
 
 TEST_SUITE_END();
