@@ -3,17 +3,13 @@
 
 #include <nupp/exceptions/address.hpp>
 #include <nupp/exceptions/byteorder.hpp>
-#include <nupp/exceptions/ip.hpp>
 #include <nupp/exceptions/socket.hpp>
 #include <nupp/export.hpp>
-
-#include <fmt/base.h>
 
 #include <cstdint>
 
 namespace nupp {
 namespace exceptions {
-
 namespace icmp {
 
 /**
@@ -31,10 +27,7 @@ struct NUPP_EXPORT echo : public message {
     echo();
 };
 
-inline void before_send(icmp::message& data) {
-    data.checksum = 0;
-    data.checksum.raw() = ip::checksum(data);
-}
+NUPP_EXPORT void before_send(icmp::message& data);
 
 }
 }

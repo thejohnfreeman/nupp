@@ -5,8 +5,6 @@
 #include <nupp/exceptions/address.hpp>
 #include <nupp/export.hpp>
 
-#include <fmt/base.h>
-
 #include <sys/socket.h>
 
 #include <cassert>
