@@ -14,13 +14,20 @@ namespace nupp {
 
 using bytes_view = std::span<std::byte const>;
 
+template <typename U, typename T>
+U const* pointer_cast(T const* p) {
+    // Three-point turn around reinterpret_cast.
+    return static_cast<U const*>(static_cast<void const*>(p));
+}
+
+template <typename U, typename T>
+U* pointer_cast(T* p) {
+    return static_cast<U*>(static_cast<void*>(p));
+}
+
 template <typename T>
 bytes_view to_bytes(T const& object) {
-    // Three-point turn around reinterpret_cast.
-    auto p1 = &object;
-    auto p2 = static_cast<void const*>(p1);
-    auto p3 = static_cast<std::byte const*>(p2);
-    return bytes_view{p3, sizeof(T)};
+    return bytes_view{pointer_cast<std::byte>(&object), sizeof(T)};
 }
 
 template <typename T>
