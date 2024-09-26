@@ -4,7 +4,6 @@
 
 #include <fmt/base.h>
 
-#include <signal.h>     // sigaction
 #include <unistd.h>     // close
 #include <err.h>        // errno
 #include <errno.h>      // errno
@@ -12,15 +11,14 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
-#include <mutex>
-#include <condition_variable>
-
 #include <cassert>
-#include <cmath>
-#include <csignal>
-#include <cstdio>
-#include <cstdlib>
-#include <limits>
+#include <chrono>
+#include <cmath>   // sqrt
+#include <csignal> // signal
+#include <cstdio>  // fflush
+#include <cstdlib> // atexit
+#include <limits>  // max
+#include <thread>  // sleep
 
 using namespace nupp::exceptions;
 
@@ -35,8 +33,8 @@ double sos   = 0.0;
 
 void onexit() {
     fmt::println("\n--- {} ping statistics ---", destname);
-    fmt::println("{} packets transmitted, {} received, {:.1f}% packet loss, time ????ms",
-            nsent, nrecv, static_cast<double>(nsent - nrecv) / nsent);
+    fmt::println("{} packets transmitted, {} received, {:.0f}% packet loss, time xxxxms",
+            nsent, nrecv, 100.0 * (nsent - nrecv) / nsent);
     double mean   = total / nrecv;
     double stddev = std::sqrt((sos / nrecv) - (mean * mean));
     fmt::println("rtt min/avg/max/mdev = {:.3f}/{:.3f}/{:.3f}/{:.3f} ms",
@@ -58,32 +56,9 @@ void ping(
   // u8_t buffer[MAX_PACKET_SIZE] = { 0 };
   // struct sockaddr_in src;
 
-  // /* Start timer. */
-  // struct timeval start, finish;
-  // gettimeofday(&start, /*timezone=*/NULL);
-
-  // /* Send. */
-  // icmp::set_checksum(message);
-  // auto sendbytes = socket.send_to(message, dest);
-  // ++nsent;
-
-  // /* Print. */
-  // if (message.sequence() == 0) {
-   //  fmt::print("PING {} ({}): {} data bytes\n", destname, dest, sendbytes);
-  // }
-
   // /* Receive. */
   // ssize_t recvbytes = jficmp_recv(&sock, buffer, MAX_PACKET_SIZE, &src);
   // ++nrecv;
-
-  // /* Stop timer. */
-  // gettimeofday(&finish, /*timezone=*/NULL);
-  // float ms = (((finish.tv_sec - start.tv_sec) * 1000000.0) +
-   //    (finish.tv_usec - start.tv_usec)) / 1000.0;
-  // if (ms < min) min = ms;
-  // if (ms > max) max = ms;
-  // total   += ms;
-  // sos += ms * ms;
 
   // /* Verify. */
   // struct ip* resp_ip;
@@ -106,40 +81,65 @@ void ping(
 
 int main(int argc, const char** argv) {
 
-  /* Parse command line. */
-  if (argc != 2) {
-      fmt::println("usage: ping host");
-      std::exit(EXIT_FAILURE);
-  }
+    /* Parse command line. */
+    if (argc != 2) {
+        fmt::println("usage: ping host");
+        std::exit(EXIT_FAILURE);
+    }
 
-  destname = argv[1];
+    destname = argv[1];
 
-  auto dest = address_v4::of(destname);
+    auto dest = address_v4::of(destname);
 
-  auto socket = socket_v4::icmp();
-  socket.ttl() = 255;
+    auto socket = socket_v4::icmp();
+    socket.ttl() = 255;
 
-  socket.bind();
+    socket.bind();
 
-  /* Schedule reporting. */
-  if (SIG_ERR == std::signal(SIGINT, onsignal)) {
-      exit(EXIT_FAILURE);
-  }
-  std::atexit(onexit);
+    /* Schedule reporting. */
+    if (SIG_ERR == std::signal(SIGINT, onsignal)) {
+        exit(EXIT_FAILURE);
+    }
+    if (std::atexit(onexit)) {
+        exit(EXIT_FAILURE);
+    }
 
-  /* Construct ICMP header. */
-  auto message = icmp::echo{};
-  // Narrowing conversion from 32 to 16 bits.
-  message.identifier = static_cast<std::uint16_t>(getpid());
-  fmt::println("{}", message.identifier);
-  message.sequence = 1;
-  fmt::println("{}", nupp::to_bytes(message));
+    /* Construct ICMP header. */
+    auto message = icmp::echo{};
+    // Narrowing conversion from 32 to 16 bits.
+    message.identifier = static_cast<std::uint16_t>(getpid());
+    message.sequence = 1;
 
-  // while (1) {
-  //   ping(socket, message, dest);
-  //   sleep(1);
-  //   message.sequence += 1;
-  // }
+    fmt::println("PING {} ({}) xx(xx) bytes of data.", destname, dest);
+    while (1) {
+        /* Start timer. */
+        auto start = std::chrono::steady_clock::now();
 
-  return EXIT_SUCCESS;
+        /* Send. */
+        auto sendbytes = socket.send_to(message, dest);
+        ++nsent;
+
+        /* Receive. */
+        // auto recvbytes = socket.recv_from(message, dest);
+        ++nrecv;
+
+        /* Stop timer. */
+        auto stop = std::chrono::steady_clock::now();
+        std::chrono::duration<double, std::milli> d = stop - start;
+        auto ms = d.count();
+        if (ms < min) min = ms;
+        if (ms > max) max = ms;
+        total += ms;
+        sos += ms * ms;
+
+        fmt::println("{} bytes from xx.net (xx): icmp_seq={} ttl=xx time={:.2f} ms",
+                sendbytes, message.sequence, ms);
+
+        using namespace std::chrono_literals;
+        std::this_thread::sleep_for(1s);
+        break;
+        // message.sequence += 1;
+    }
+
+    return EXIT_SUCCESS;
 }

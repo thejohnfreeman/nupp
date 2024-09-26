@@ -8,11 +8,6 @@ namespace icmp {
 
 echo::echo() : message{/*type=*/ICMP_ECHO, /*code=*/0} {}
 
-void before_send(icmp::message& data) {
-    data.checksum = 0;
-    data.checksum.raw() = ip::checksum(data);
-}
-
 }
 }
 }

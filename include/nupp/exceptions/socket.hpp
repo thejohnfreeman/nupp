@@ -5,6 +5,8 @@
 #include <nupp/exceptions/address.hpp>
 #include <nupp/export.hpp>
 
+#include <fmt/base.h>
+
 #include <sys/socket.h>
 
 #include <cassert>
@@ -14,6 +16,18 @@
 
 namespace nupp {
 namespace exceptions {
+
+namespace detail {
+
+struct anything {
+    template <typename T>
+    anything() {}
+};
+
+// Require an implicit conversion to put this overload at the bottom.
+inline void before_send(anything const& data) {}
+
+}
 
 /**
  * An IPv4 socket.
@@ -80,12 +94,13 @@ public:
      */
     void connect(address_v4 const& address);
 
-    std::size_t send_to(bytes_view const& data, address_v4 const& address);
+    std::size_t send_to(bytes_view const& data, address_v4 const& address, unsigned int flags = 0);
 
     template <typename T>
-    std::size_t send_to(T& data, address_v4 const& address) {
+    std::size_t send_to(T& data, address_v4 const& address, unsigned int flags = 0) {
+        using detail::before_send;
         before_send(data);
-        return send_to({&data, sizeof(T)}, address);
+        return send_to(to_bytes(data), address);
     }
 
     static socket_v4 icmp();
@@ -98,9 +113,6 @@ private:
     template <typename T>
     friend class option;
 };
-
-template <typename T>
-void before_send(T& data) {}
 
 // This must be a free function to permit third-party overloads.
 template <typename T>
