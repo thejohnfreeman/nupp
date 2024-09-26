@@ -12,7 +12,12 @@
 
 namespace nupp {
 
-using bytes_view = std::span<std::byte const>;
+template <std::size_t N = std::dynamic_extent>
+using rbytes = std::span<std::byte const, N>;
+using bytes_view = rbytes<>;
+
+template <std::size_t N = std::dynamic_extent>
+using wbytes = std::span<std::byte, N>;
 
 template <typename U, typename T>
 U const* pointer_cast(T const* p) {
@@ -26,8 +31,13 @@ U* pointer_cast(T* p) {
 }
 
 template <typename T>
-bytes_view to_bytes(T const& object) {
-    return bytes_view{pointer_cast<std::byte>(&object), sizeof(T)};
+auto to_bytes(T const& object) {
+    return rbytes<sizeof(T)>(pointer_cast<std::byte>(&object), sizeof(T));
+}
+
+template <typename T>
+auto to_bytes(T& object) {
+    return wbytes<sizeof(T)>(pointer_cast<std::byte>(&object), sizeof(T));
 }
 
 template <typename T>

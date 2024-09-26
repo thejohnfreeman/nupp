@@ -22,11 +22,6 @@ namespace ip {
 NUPP_EXPORT std::uint16_t checksum(bytes_view const& data);
 
 template <typename T>
-std::uint16_t checksum(T const& data) {
-    return checksum(to_bytes(data));
-}
-
-template <typename T>
 struct payload_traits {
     static constexpr std::size_t size = sizeof(T);
 };
