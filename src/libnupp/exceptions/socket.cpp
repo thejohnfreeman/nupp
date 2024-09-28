@@ -40,14 +40,33 @@ socket_v4::option<std::uint8_t> socket_v4::ttl() {
 std::size_t socket_v4::send_to(
     bytes_view const& data, address_v4 const& address, unsigned int flags
 ) {
+    fmt::println("send_to()\n{}", data);
+    fmt::println("sendto({}, {})", static_cast<void const*>(data.data()), data.size());
+    fmt::println("{}", data);
     auto sent = ::sendto(
-        _fd, data.data(), data.size(), flags,
-        address, sizeof(address)
+        _fd, data.data(), data.size(), flags, address, sizeof(address)
     );
     if (-1 == sent) {
+        fmt::println("errno = {}", errno);
         throw std::system_error(errno, std::system_category());
     }
     return sent;
+}
+
+std::size_t socket_v4::receive_from(
+    wbytes<>& data, address_v4& address, unsigned int flags
+) {
+    socklen_t size = sizeof(address);
+    auto received = ::recvfrom(
+        _fd, data.data(), data.size(), flags, address, &size
+    );
+    if (sizeof(address) != size) {
+        throw std::system_error(std::make_error_code(std::errc::message_size));
+    }
+    if (-1 == received) {
+        throw std::system_error(errno, std::system_category());
+    }
+    return received;
 }
 
 socket_v4 socket_v4::icmp() {

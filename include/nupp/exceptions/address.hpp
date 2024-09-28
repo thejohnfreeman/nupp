@@ -28,6 +28,10 @@ public:
         return reinterpret_cast<sockaddr const*>(this);
     }
 
+    operator sockaddr* () {
+        return reinterpret_cast<sockaddr*>(this);
+    }
+
     /**
      * @param address 32-bit address in network byte order
      */

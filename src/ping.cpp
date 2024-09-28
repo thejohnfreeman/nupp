@@ -46,9 +46,6 @@ void onsignal(int signal) {
     if (SIGINT == signal) exit(EXIT_SUCCESS);
 }
 
-void ping(
-    socket_v4& socket, icmp::echo& message, address_v4 const& dest)
-{
   /* Prepare to receive. We want minimal processing between send and
    // * receive. */
   // struct icmp* req = (struct icmp*)sock.buffer;
@@ -74,10 +71,11 @@ void ping(
    //    recvbytes,
    //    buffer[12], buffer[13], buffer[14], buffer[15],
    //    ntohs(resp_icmp->icmp_seq), resp_ip->ip_ttl, ms);
-}
 
 #define PRINT(T) \
     fmt::println("{:16} {:4} {:4}", #T, sizeof(T), alignof(T))
+
+#define EXPR(expr) fmt::println("{} = {}", #expr, expr)
 
 int main(int argc, const char** argv) {
 
@@ -105,10 +103,23 @@ int main(int argc, const char** argv) {
     }
 
     /* Construct ICMP header. */
-    auto message = icmp::echo{};
+
+    // std::byte buffer[1024] = {std::byte{}};
+    // auto message = nupp::message<icmp::echo>{buffer, 8};
+    // EXPR(static_cast<void*>(buffer));
+    // EXPR(static_cast<void*>(message.data()));
+    // EXPR(message.size());
+    // auto& body = *message;
+    // EXPR(static_cast<void*>(&body));
+
+    icmp::echo_static<0> message;
+    auto& body = message;
+
     // Narrowing conversion from 32 to 16 bits.
-    message.identifier = static_cast<std::uint16_t>(getpid());
-    message.sequence = 1;
+    body.identifier = static_cast<std::uint16_t>(getpid());
+    body.sequence = 1;
+    // fmt::println("{}", nupp::to_bytes(body));
+    // fmt::println("{}", static_cast<nupp::bytes_view const&>(message));
 
     fmt::println("PING {} ({}) xx(xx) bytes of data.", destname, dest);
     while (1) {
@@ -133,12 +144,12 @@ int main(int argc, const char** argv) {
         sos += ms * ms;
 
         fmt::println("{} bytes from xx.net (xx): icmp_seq={} ttl=xx time={:.2f} ms",
-                sendbytes, message.sequence, ms);
+                sendbytes, body.sequence, ms);
 
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(1s);
         break;
-        // message.sequence += 1;
+        // body.sequence += 1;
     }
 
     return EXIT_SUCCESS;
