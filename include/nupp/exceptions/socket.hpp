@@ -28,7 +28,6 @@ struct anything {
 
 template <typename T>
 void before_send(T& data) {
-    fmt::println("before_send<T>({})", static_cast<void const*>(&data));
     nupp::message m(data);
     before_send(m);
 }
@@ -100,21 +99,20 @@ public:
      */
     void connect(address_v4 const& address);
 
-    std::size_t send_to(bytes_view const& data, address_v4 const& address, unsigned int flags = 0);
+    std::size_t _send_to(bytes_view const& data, address_v4 const& address, unsigned int flags = 0);
 
     template <typename T>
     std::size_t send_to(nupp::message<T>& data, address_v4 const& address, unsigned int flags = 0) {
         using detail::before_send;
         before_send(data);
-        return send_to(static_cast<bytes_view const&>(data), address);
+        return _send_to(data, address);
     }
 
     template <typename T>
-    requires (!std::convertible_to<T, bytes_view>)
     std::size_t send_to(T& data, address_v4 const& address, unsigned int flags = 0) {
         using detail::before_send;
         before_send(data);
-        return send_to(to_bytes(data), address);
+        return _send_to(to_bytes(data), address);
     }
 
     std::size_t receive_from(wbytes<>& data, address_v4& address, unsigned int flags = 0);

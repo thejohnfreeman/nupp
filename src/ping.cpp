@@ -105,21 +105,15 @@ int main(int argc, const char** argv) {
     /* Construct ICMP header. */
 
     // std::byte buffer[1024] = {std::byte{}};
-    // auto message = nupp::message<icmp::echo>{buffer, 8};
-    // EXPR(static_cast<void*>(buffer));
-    // EXPR(static_cast<void*>(message.data()));
-    // EXPR(message.size());
+    // auto message = nupp::message<icmp::echo_header>::construct(buffer, 8);
     // auto& body = *message;
-    // EXPR(static_cast<void*>(&body));
 
-    icmp::echo_static<0> message;
+    icmp::echo<0> message;
     auto& body = message;
 
     // Narrowing conversion from 32 to 16 bits.
     body.identifier = static_cast<std::uint16_t>(getpid());
     body.sequence = 1;
-    // fmt::println("{}", nupp::to_bytes(body));
-    // fmt::println("{}", static_cast<nupp::bytes_view const&>(message));
 
     fmt::println("PING {} ({}) xx(xx) bytes of data.", destname, dest);
     while (1) {

@@ -8,7 +8,7 @@ namespace nupp {
 namespace exceptions {
 namespace icmp {
 
-echo::echo() : message{/*type=*/ICMP_ECHO, /*code=*/0} {}
+echo_header::echo_header() : message{/*type=*/ICMP_ECHO, /*code=*/0} {}
 
 }
 }

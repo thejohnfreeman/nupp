@@ -27,54 +27,51 @@ struct NUPP_EXPORT message {
 
 static_assert(std::is_trivially_destructible_v<message>);
 
-struct NUPP_EXPORT echo : public message {
+struct NUPP_EXPORT echo_header : public message {
     beu16_t identifier = 0;
     beu16_t sequence = 0;
 
-    echo();
+    echo_header();
 
     template <std::size_t N = 0>
     rbytes<N> data() const {
         auto p = pointer_cast<std::byte const>(this);
-        return {p + sizeof(echo), N};
+        return {p + sizeof(echo_header), N};
     }
 
     rbytes<> data(std::size_t n) const {
         auto p = pointer_cast<std::byte const>(this);
-        return {p + sizeof(echo), n};
+        return {p + sizeof(echo_header), n};
     }
 
     template <std::size_t N = 0>
     wbytes<N> data() {
         auto p = pointer_cast<std::byte>(this);
-        return {p + sizeof(echo), N};
+        return {p + sizeof(echo_header), N};
     }
 
     wbytes<> data(std::size_t n) {
         auto p = pointer_cast<std::byte>(this);
-        return {p + sizeof(echo), n};
+        return {p + sizeof(echo_header), n};
     }
 
 };
 
-static_assert(std::is_trivially_destructible_v<echo>);
+static_assert(std::is_trivially_destructible_v<echo_header>);
 
 template <std::size_t N = 0>
-struct echo_static : public echo {
+struct echo : public echo_header {
     // sizeof(std::array<std::byte, N>) != sizeof(std::byte[N]) == N
     std::byte data[N];
 };
 
-static_assert(std::is_trivially_destructible_v<echo_static<8>>);
+static_assert(std::is_trivially_destructible_v<echo<8>>);
 
 template <typename T>
 requires std::derived_from<T, message>
 void before_send(nupp::message<T>& data) {
-    fmt::println("before_send({})", static_cast<void const*>(data.data()));
-    fmt::println("before_send({})", static_cast<void const*>(data));
     data->checksum = 0;
     data->checksum.raw() = ip::checksum(data);
-    fmt::println("before_send() =>\n{}", static_cast<bytes_view const&>(data));
 }
 
 }

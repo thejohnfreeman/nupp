@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <ostream>
 #include <span>
+#include <type_traits>
 
 namespace nupp {
 
@@ -47,15 +48,21 @@ auto to_bytes(T& object) {
 }
 
 template <typename T>
-bool is_aligned(T const& object) {
-    std::uintptr_t p = reinterpret_cast<std::uintptr_t>(&object);
+bool is_aligned(void const* address) {
+    std::uintptr_t p = reinterpret_cast<std::uintptr_t>(address);
     return p % alignof(T) == 0;
+}
+
+template <typename T>
+bool is_aligned(T const& object) {
+    return is_aligned(&object);
 }
 
 /**
  * A light pointer to a runtime-sized message.
  */
 template <typename T>
+requires std::is_trivially_destructible_v<T>
 struct message : public wbytes<> {
     using type = T;
 
@@ -63,9 +70,17 @@ struct message : public wbytes<> {
         : wbytes<>(static_cast<std::byte*>(pointer), size)
     {
         assert(size >= sizeof(T));
+        assert(is_aligned<T>(pointer));
     }
 
     message(T& object) : message(&object, sizeof(T)) {}
+
+    template <typename U = T>
+    requires std::is_trivially_destructible_v<U>
+    static message<U> construct(void* pointer, std::size_t size) {
+        new (pointer) T();
+        return {pointer, size};
+    }
 
     T& operator* () {
         auto& ref = *pointer_cast<T>(data());
