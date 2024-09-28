@@ -6,6 +6,7 @@
 #include <fmt/ostream.h>
 
 #include <cassert>
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <ostream>
@@ -54,6 +55,12 @@ bool is_aligned(void const* address) {
 }
 
 template <typename T>
+bool is_aligned(T* address) {
+    return is_aligned<T>(static_cast<void const*>(address));
+}
+
+template <typename T>
+requires (!std::convertible_to<T, void const*>)
 bool is_aligned(T const& object) {
     return is_aligned(&object);
 }
@@ -63,15 +70,9 @@ bool is_aligned(T const& object) {
  */
 template <typename T>
 requires std::is_trivially_destructible_v<T>
-struct message : public wbytes<> {
+class message : public wbytes<> {
+public:
     using type = T;
-
-    message(void* pointer, std::size_t size)
-        : wbytes<>(static_cast<std::byte*>(pointer), size)
-    {
-        assert(size >= sizeof(T));
-        assert(is_aligned<T>(pointer));
-    }
 
     message(T& object) : message(&object, sizeof(T)) {}
 
@@ -79,6 +80,12 @@ struct message : public wbytes<> {
     requires std::is_trivially_destructible_v<U>
     static message<U> construct(void* pointer, std::size_t size) {
         new (pointer) T();
+        return {pointer, size};
+    }
+
+    template <typename U = T>
+    requires std::is_trivially_destructible_v<U>
+    static message<U> interpret(void* pointer, std::size_t size) {
         return {pointer, size};
     }
 
@@ -108,6 +115,14 @@ struct message : public wbytes<> {
 
     operator T const* () const {
         return &**this;
+    }
+
+private:
+    message(void* pointer, std::size_t size)
+        : wbytes<>(static_cast<std::byte*>(pointer), size)
+    {
+        assert(size >= sizeof(T));
+        assert(is_aligned<T>(pointer));
     }
 
 };
