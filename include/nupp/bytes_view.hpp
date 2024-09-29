@@ -85,9 +85,7 @@ public:
         return {pointer, size};
     }
 
-    template <typename U = T>
-    requires std::is_trivially_destructible_v<U>
-    static message<U> interpret(void* pointer, std::size_t size) {
+    static message<T> interpret(void* pointer, std::size_t size) {
         return {pointer, size};
     }
 

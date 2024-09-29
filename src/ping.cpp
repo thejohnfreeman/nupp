@@ -88,13 +88,10 @@ int main(int argc, const char** argv) {
     body.identifier = static_cast<std::uint16_t>(getpid());
     body.sequence = 1;
 
-    std::byte obuffer[1024] = {std::byte{}};
-    address_v4 src;
-
     fmt::println(
             "PING {} ({}) {}({}) bytes of data.",
             destname, dest, DATA_SIZE, TOTAL_SIZE);
-    while (1) {
+    while (true) {
         /* Start timer. */
         auto start = std::chrono::steady_clock::now();
 
@@ -103,8 +100,20 @@ int main(int argc, const char** argv) {
         ++nsent;
 
         /* Receive. */
-        auto incoming = socket.receive_from<icmp::echo_header>(nupp::wbytes<>{obuffer, 1024}, src);
+        address_v4 src;
+
+        std::byte ibuffer[1024] = {};
+        auto incoming = socket.receive_from<icmp::echo_header>(ibuffer, src);
         auto recvbytes = incoming.size();
+
+        // icmp::echo<DATA_SIZE> _incoming;
+        // auto* incoming = &_incoming;
+        // auto recvbytes = socket.receive_from(_incoming, src);
+
+        // std::byte ibuffer[1024] = {};
+        // auto incoming = nupp::message<icmp::echo_header>::interpret(ibuffer, ICMP_SIZE);
+        // auto recvbytes = socket.receive_from(incoming, src);
+
         ++nrecv;
 
         /* Verify. */
