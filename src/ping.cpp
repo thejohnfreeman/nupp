@@ -128,8 +128,7 @@ int main(int argc, const char** argv) {
 
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(1s);
-        body.sequence = body.sequence + 1;
-        // TODO: body.sequence += 1;
+        body.sequence += 1;
     }
 
     return EXIT_SUCCESS;

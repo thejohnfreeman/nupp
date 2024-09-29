@@ -61,6 +61,15 @@ public:
     }
 };
 
+template <typename T, typename U>
+// TODO: Forbid narrowing conversions.
+requires std::integral<U>
+big_endian<T>& operator+= (big_endian<T>& lhs, U const& rhs) {
+    return lhs = lhs.native() + rhs;
+}
+
+// TODO: More operators.
+
 using beu16_t = big_endian<std::uint16_t>;
 static_assert(sizeof(beu16_t) == sizeof(std::uint16_t));
 static_assert(alignof(beu16_t) == alignof(std::uint16_t));
