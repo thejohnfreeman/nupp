@@ -7,6 +7,7 @@
 #include <unistd.h>     // close
 #include <err.h>        // errno
 #include <errno.h>      // errno
+#include <netinet/ip_icmp.h> // ICMP_ECHOREPLY
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -46,37 +47,6 @@ void onsignal(int signal) {
     if (SIGINT == signal) exit(EXIT_SUCCESS);
 }
 
-  /* Prepare to receive. We want minimal processing between send and
-   // * receive. */
-  // struct icmp* req = (struct icmp*)sock.buffer;
-// #define MAX_PACKET_SIZE 64
-  // u8_t buffer[MAX_PACKET_SIZE] = { 0 };
-  // struct sockaddr_in src;
-
-  // /* Receive. */
-  // ssize_t recvbytes = jficmp_recv(&sock, buffer, MAX_PACKET_SIZE, &src);
-  // ++nrecv;
-
-  // /* Verify. */
-  // struct ip* resp_ip;
-  // struct icmp* resp_icmp;
-  // jficmp_open(buffer, &resp_ip, &resp_icmp);
-  // assert(resp_icmp->icmp_type == ICMP_ECHOREPLY);
-  // assert(resp_icmp->icmp_code == 0);
-  // assert(resp_icmp->icmp_id   == req->icmp_id);
-  // assert(resp_icmp->icmp_seq  == req->icmp_seq);
-
-  // /* Print. */
-  // printf("%ld bytes from %d.%d.%d.%d: icmp_seq=%d ttl=%d time=%.3f ms\n",
-   //    recvbytes,
-   //    buffer[12], buffer[13], buffer[14], buffer[15],
-   //    ntohs(resp_icmp->icmp_seq), resp_ip->ip_ttl, ms);
-
-#define PRINT(T) \
-    fmt::println("{:16} {:4} {:4}", #T, sizeof(T), alignof(T))
-
-#define EXPR(expr) fmt::println("{} = {}", #expr, expr)
-
 int main(int argc, const char** argv) {
 
     /* Parse command line. */
@@ -103,30 +73,44 @@ int main(int argc, const char** argv) {
     }
 
     /* Construct ICMP header. */
+    constexpr std::size_t TOTAL_SIZE = 84;
+    constexpr std::size_t ICMP_SIZE = TOTAL_SIZE - 20;
+    constexpr std::size_t DATA_SIZE = ICMP_SIZE - 8;
 
     // std::byte buffer[1024] = {std::byte{}};
-    // auto message = nupp::message<icmp::echo_header>::construct(buffer, 8);
-    // auto& body = *message;
+    // auto outgoing = nupp::message<icmp::echo_header>::construct(buffer, ICMP_SIZE);
+    // auto& body = *outgoing;
 
-    icmp::echo<0> message;
-    auto& body = message;
+    icmp::echo<DATA_SIZE> outgoing;
+    auto& body = outgoing;
 
     // Narrowing conversion from 32 to 16 bits.
     body.identifier = static_cast<std::uint16_t>(getpid());
     body.sequence = 1;
 
-    fmt::println("PING {} ({}) xx(xx) bytes of data.", destname, dest);
+    std::byte obuffer[1024] = {std::byte{}};
+    address_v4 src;
+
+    fmt::println(
+            "PING {} ({}) {}({}) bytes of data.",
+            destname, dest, DATA_SIZE, TOTAL_SIZE);
     while (1) {
         /* Start timer. */
         auto start = std::chrono::steady_clock::now();
 
         /* Send. */
-        auto sendbytes = socket.send_to(message, dest);
+        auto sendbytes = socket.send_to(outgoing, dest);
         ++nsent;
 
         /* Receive. */
-        // auto recvbytes = socket.recv_from(message, dest);
+        auto incoming = socket.receive_from<icmp::echo_header>(nupp::wbytes<>{obuffer, 1024}, src);
+        auto recvbytes = incoming.size();
         ++nrecv;
+
+        /* Verify. */
+        assert(incoming->type == ICMP_ECHOREPLY);
+        assert(incoming->code == 0);
+        assert(incoming->sequence == body.sequence);
 
         /* Stop timer. */
         auto stop = std::chrono::steady_clock::now();
@@ -137,13 +121,15 @@ int main(int argc, const char** argv) {
         total += ms;
         sos += ms * ms;
 
-        fmt::println("{} bytes from xx.net (xx): icmp_seq={} ttl=xx time={:.2f} ms",
-                sendbytes, body.sequence, ms);
+        /* Print. */
+        fmt::println(
+                "{} bytes from xx.net ({}): icmp_seq={} ttl=xx time={:.2f} ms",
+                sendbytes, src, body.sequence, ms);
 
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(1s);
-        break;
-        // body.sequence += 1;
+        body.sequence = body.sequence + 1;
+        // TODO: body.sequence += 1;
     }
 
     return EXIT_SUCCESS;

@@ -105,17 +105,33 @@ public:
     std::size_t send_to(nupp::message<T>& data, address_v4 const& address, unsigned int flags = 0) {
         using detail::before_send;
         before_send(data);
-        return _send_to(data, address);
+        return _send_to(data, address, flags);
     }
 
     template <typename T>
     std::size_t send_to(T& data, address_v4 const& address, unsigned int flags = 0) {
         using detail::before_send;
         before_send(data);
-        return _send_to(to_bytes(data), address);
+        return _send_to(to_bytes(data), address, flags);
     }
 
-    std::size_t receive_from(wbytes<>& data, address_v4& address, unsigned int flags = 0);
+    std::size_t _receive_from(wbytes<> const& data, address_v4& address, unsigned int flags = 0);
+
+    template <typename T>
+    nupp::message<T> receive_from(wbytes<> const& data, address_v4& address, unsigned int flags = 0) {
+        auto size = _receive_from(data, address, flags);
+        return nupp::message<T>::interpret(data.data(), size);
+    }
+
+    template <typename T>
+    std::size_t receive_from(nupp::message<T>& data, address_v4& address, unsigned int flags = 0) {
+        return _receive_from(data, address, flags);
+    }
+
+    template <typename T>
+    std::size_t receive_from(T& data, address_v4& address, unsigned int flags = 0) {
+        return _receive_from(to_bytes(data), address, flags);
+    }
 
     static socket_v4 icmp();
     static socket_v4 tcp();

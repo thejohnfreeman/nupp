@@ -49,8 +49,8 @@ std::size_t socket_v4::_send_to(
     return sent;
 }
 
-std::size_t socket_v4::receive_from(
-    wbytes<>& data, address_v4& address, unsigned int flags
+std::size_t socket_v4::_receive_from(
+    wbytes<> const& data, address_v4& address, unsigned int flags
 ) {
     socklen_t size = sizeof(address);
     auto received = ::recvfrom(

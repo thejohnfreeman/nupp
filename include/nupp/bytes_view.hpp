@@ -15,10 +15,12 @@
 
 namespace nupp {
 
+// Read-only byte sequence.
 template <std::size_t N = std::dynamic_extent>
 using rbytes = std::span<std::byte const, N>;
 using bytes_view = rbytes<>;
 
+// Writeable byte sequence.
 template <std::size_t N = std::dynamic_extent>
 using wbytes = std::span<std::byte, N>;
 
@@ -131,7 +133,13 @@ private:
 
 namespace std {
 
-NUPP_EXPORT std::ostream& operator<< (std::ostream& out, nupp::bytes_view const bv);
+NUPP_EXPORT std::ostream& operator<< (std::ostream& out, nupp::bytes_view const& bv);
+
+template <typename T>
+requires std::convertible_to<T, nupp::bytes_view>
+std::ostream& operator<< (std::ostream& out, T const& object) {
+    return out << static_cast<nupp::bytes_view const&>(object);
+}
 
 }
 
@@ -143,5 +151,8 @@ struct NUPP_EXPORT fmt::formatter<nupp::bytes_view> : public ostream_formatter {
 
 template <std::size_t N>
 struct NUPP_EXPORT fmt::formatter<nupp::wbytes<N>> : public ostream_formatter {};
+
+template <typename T>
+struct NUPP_EXPORT fmt::formatter<nupp::message<T>> : public ostream_formatter {};
 
 #endif
