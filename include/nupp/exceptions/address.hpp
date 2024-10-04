@@ -9,6 +9,7 @@
 #include <netdb.h>
 
 #include <cstdint>
+#include <string>
 #include <system_error>
 #include <type_traits>
 
@@ -31,6 +32,8 @@ public:
     operator sockaddr* () {
         return reinterpret_cast<sockaddr*>(this);
     }
+
+    std::string name() const;
 
     /**
      * @param address 32-bit address in network byte order

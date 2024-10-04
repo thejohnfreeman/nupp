@@ -35,14 +35,25 @@ address_v4& address_v4::operator= (sockaddr const& rhs) {
     return *this;
 }
 
+std::string address_v4::name() const {
+    std::string name(32, '\0');
+    int errc = ::getnameinfo(
+            *this, sizeof(*this),
+            name.data(), name.size(),
+            /*serv=*/nullptr, /*servlen=*/0,
+            /*flags=*/0);
+    if (errc == EAI_OVERFLOW) {
+        // retry with larger buffer.
+    } else if (errc) {
+        throw std::system_error(errc, the_address_error_category);
+    }
+    return name;
+}
+
 address_v4 address_v4::from(std::uint32_t addr32) {
     address_v4 address;
     address.sin_addr.s_addr = addr32;
     return address;
-}
-
-address_v4 address_v4::any() {
-    return from(INADDR_ANY);
 }
 
 address_v4 address_v4::of(char const* hostname) {
@@ -55,6 +66,10 @@ address_v4 address_v4::of(char const* hostname) {
     address_v4 address;
     address = *result->ai_addr;
     return address;
+}
+
+address_v4 address_v4::any() {
+    return from(INADDR_ANY);
 }
 
 }

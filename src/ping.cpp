@@ -132,8 +132,8 @@ int main(int argc, const char** argv) {
 
         /* Print. */
         fmt::println(
-                "{} bytes from xx.net ({}): icmp_seq={} ttl=xx time={:.2f} ms",
-                sendbytes, src, body.sequence, ms);
+                "{} bytes from {} ({}): icmp_seq={} ttl=xx time={:.2f} ms",
+                sendbytes, src.name(), src, body.sequence, ms);
 
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(1s);
