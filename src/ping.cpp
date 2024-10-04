@@ -3,6 +3,7 @@
 #include <nupp/exceptions/icmp.hpp>
 
 #include <fmt/base.h>
+#include <fmt/chrono.h>
 
 #include <unistd.h>     // close
 #include <err.h>        // errno
@@ -31,11 +32,13 @@ double max   = 0.0;
 double total = 0.0;
 // Sum of squares.
 double sos   = 0.0;
+std::chrono::steady_clock::time_point first, last;
 
 void onexit() {
+    std::chrono::duration<double, std::milli> ms = last - first;
     fmt::println("\n--- {} ping statistics ---", destname);
-    fmt::println("{} packets transmitted, {} received, {:.0f}% packet loss, time xxxxms",
-            nsent, nrecv, 100.0 * (nsent - nrecv) / nsent);
+    fmt::println("{} packets transmitted, {} received, {:.0f}% packet loss, time {:.0}",
+            nsent, nrecv, 100.0 * (nsent - nrecv) / nsent, ms);
     double mean   = total / nrecv;
     double stddev = std::sqrt((sos / nrecv) - (mean * mean));
     fmt::println("rtt min/avg/max/mdev = {:.3f}/{:.3f}/{:.3f}/{:.3f} ms",
@@ -91,6 +94,7 @@ int main(int argc, const char** argv) {
     fmt::println(
             "PING {} ({}) {}({}) bytes of data.",
             destname, dest, DATA_SIZE, TOTAL_SIZE);
+    first = last = std::chrono::steady_clock::now();
     while (true) {
         /* Start timer. */
         auto start = std::chrono::steady_clock::now();
@@ -122,7 +126,7 @@ int main(int argc, const char** argv) {
         assert(incoming->sequence == body.sequence);
 
         /* Stop timer. */
-        auto stop = std::chrono::steady_clock::now();
+        auto stop = last = std::chrono::steady_clock::now();
         std::chrono::duration<double, std::milli> d = stop - start;
         auto ms = d.count();
         if (ms < min) min = ms;
