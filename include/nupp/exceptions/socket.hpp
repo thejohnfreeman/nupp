@@ -110,6 +110,7 @@ public:
 
     std::size_t _send_to(rbytes<> const& data, address_v4 const& address, unsigned int flags = 0);
 
+    /** Send a dynamically-sized message of indirect type. */
     template <typename T>
     std::size_t send_to(nupp::message<T>& data, address_v4 const& address, unsigned int flags = 0) {
         using detail::before_send;
@@ -117,6 +118,7 @@ public:
         return _send_to(data, address, flags);
     }
 
+    /** Send a statically-sized message of direct type. */
     template <typename T>
     std::size_t send_to(T& data, address_v4 const& address, unsigned int flags = 0) {
         using detail::before_send;
@@ -126,17 +128,23 @@ public:
 
     std::size_t _receive_from(wbytes<> const& data, address_v4& address, unsigned int flags = 0);
 
+    /**
+     * Write a dynamically-sized message to a buffer,
+     * and interpret it as indirect type.
+     */
     template <typename T>
     nupp::message<T> receive_from(wbytes<> const& data, address_v4& address, unsigned int flags = 0) {
         auto size = _receive_from(data, address, flags);
         return nupp::message<T>::interpret(data.data(), size);
     }
 
+    /** Overwrite a dynamically-sized message of indirect type. */
     template <typename T>
     std::size_t receive_from(nupp::message<T>& data, address_v4& address, unsigned int flags = 0) {
         return _receive_from(data, address, flags);
     }
 
+    /** Overwrite a statically-sized message of direct type. */
     template <typename T>
     std::size_t receive_from(T& data, address_v4& address, unsigned int flags = 0) {
         return _receive_from(to_bytes(data), address, flags);

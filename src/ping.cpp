@@ -50,6 +50,69 @@ void onsignal(int signal) {
     if (SIGINT == signal) exit(EXIT_SUCCESS);
 }
 
+constexpr std::size_t TOTAL_SIZE = 84;
+constexpr std::size_t ICMP_SIZE = TOTAL_SIZE - sizeof(ip::header);
+constexpr std::size_t DATA_SIZE = ICMP_SIZE - sizeof(icmp::echo_header);
+
+// Send a statically-sized message of direct type.
+struct sender1 {
+    icmp::echo<DATA_SIZE> outgoing;
+
+    icmp::echo_header& body = outgoing;
+    auto send(socket_v4& socket, address_v4 const& dest) {
+        return socket.send_to(outgoing, dest);
+    }
+};
+
+// Send a dynamically-sized message of indirect type.
+struct sender2 {
+    std::byte buffer[1024] = {};
+    nupp::message<icmp::echo_header> outgoing
+        = nupp::message<icmp::echo_header>::construct(buffer, ICMP_SIZE);
+
+    icmp::echo_header& body = *outgoing;
+    auto send(socket_v4& socket, address_v4 const& dest) {
+        return socket.send_to(outgoing, dest);
+    }
+};
+
+// Overwrite a statically-sized message of direct type.
+struct receiver1 {
+    icmp::echo<DATA_SIZE> incoming;
+
+    icmp::echo_header* body = &incoming;
+    auto receive(socket_v4& socket, address_v4& src) {
+        return socket.receive_from(incoming, src);
+    }
+};
+
+// Overwrite a dynamically-sized message of indirect type.
+struct receiver2 {
+    std::byte buffer[1024] = {};
+    nupp::message<icmp::echo_header> incoming
+        = nupp::message<icmp::echo_header>::interpret(buffer, ICMP_SIZE);
+
+    icmp::echo_header* body = incoming;
+    auto receive(socket_v4& socket, address_v4& src) {
+        return socket.receive_from(incoming, src);
+    }
+
+};
+
+// Write a dynamically-sized message to a buffer,
+// and interpret it as indirect type.
+struct receiver3 {
+    std::byte buffer[1024] = {};
+
+    icmp::echo_header* body = nullptr;
+    auto receive(socket_v4& socket, address_v4& src) {
+        // nupp::message must be non-null.
+        auto incoming = socket.receive_from<icmp::echo_header>(buffer, src);
+        body = incoming;
+        return incoming.size();
+    }
+};
+
 int main(int argc, const char** argv) {
 
     /* Parse command line. */
@@ -76,20 +139,11 @@ int main(int argc, const char** argv) {
     }
 
     /* Construct ICMP header. */
-    constexpr std::size_t TOTAL_SIZE = 84;
-    constexpr std::size_t ICMP_SIZE = TOTAL_SIZE - 20;
-    constexpr std::size_t DATA_SIZE = ICMP_SIZE - 8;
-
-    // std::byte buffer[1024] = {std::byte{}};
-    // auto outgoing = nupp::message<icmp::echo_header>::construct(buffer, ICMP_SIZE);
-    // auto& body = *outgoing;
-
-    icmp::echo<DATA_SIZE> outgoing;
-    auto& body = outgoing;
+    sender2 sender;
 
     // Narrowing conversion from 32 to 16 bits.
-    body.identifier = static_cast<std::uint16_t>(getpid());
-    body.sequence = 1;
+    sender.body.identifier = static_cast<std::uint16_t>(getpid());
+    sender.body.sequence = 1;
 
     fmt::println(
             "PING {} ({}) {}({}) bytes of data.",
@@ -100,30 +154,20 @@ int main(int argc, const char** argv) {
         auto start = std::chrono::steady_clock::now();
 
         /* Send. */
-        auto sendbytes = socket.send_to(outgoing, dest);
+        auto sendbytes = sender.send(socket, dest);
         ++nsent;
 
         /* Receive. */
         address_v4 src;
-
-        std::byte ibuffer[1024] = {};
-        auto incoming = socket.receive_from<icmp::echo_header>(ibuffer, src);
-        auto recvbytes = incoming.size();
-
-        // icmp::echo<DATA_SIZE> _incoming;
-        // auto* incoming = &_incoming;
-        // auto recvbytes = socket.receive_from(_incoming, src);
-
-        // std::byte ibuffer[1024] = {};
-        // auto incoming = nupp::message<icmp::echo_header>::interpret(ibuffer, ICMP_SIZE);
-        // auto recvbytes = socket.receive_from(incoming, src);
+        receiver3 receiver;
+        auto recvbytes = receiver.receive(socket, src);
 
         ++nrecv;
 
         /* Verify. */
-        assert(incoming->type == ICMP_ECHOREPLY);
-        assert(incoming->code == 0);
-        assert(incoming->sequence == body.sequence);
+        assert(receiver.body->type == icmp::message_type_t::ECHO_REPLY);
+        assert(receiver.body->code == 0);
+        assert(receiver.body->sequence == sender.body.sequence);
 
         /* Stop timer. */
         auto stop = last = std::chrono::steady_clock::now();
@@ -137,11 +181,11 @@ int main(int argc, const char** argv) {
         /* Print. */
         fmt::println(
                 "{} bytes from {} ({}): icmp_seq={} ttl=xx time={:.2f} ms",
-                sendbytes, src.name(), src, body.sequence, ms);
+                sendbytes, src.name(), src, sender.body.sequence, ms);
 
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(1s);
-        body.sequence += 1;
+        sender.body.sequence += 1;
     }
 
     return EXIT_SUCCESS;
