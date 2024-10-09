@@ -2,8 +2,8 @@
 #define NUPP_EXCEPTIONS_ICMP_HPP
 
 #include <nupp/bytes.hpp>
+#include <nupp/endian.hpp>
 #include <nupp/exceptions/address.hpp>
-#include <nupp/exceptions/byteorder.hpp>
 #include <nupp/exceptions/ip.hpp>
 #include <nupp/exceptions/socket.hpp>
 #include <nupp/export.hpp>
@@ -20,18 +20,21 @@ namespace icmp {
  * @see https://datatracker.ietf.org/doc/html/rfc792
  */
 struct NUPP_EXPORT message {
-    std::uint8_t type;
-    std::uint8_t code;
-    beu16_t checksum = 0;
+    nu8_t type;
+    nu8_t code;
+    nu16_t checksum = 0;
 };
 
 static_assert(std::is_trivially_destructible_v<message>);
 
 struct NUPP_EXPORT echo_header : public message {
-    beu16_t identifier = 0;
-    beu16_t sequence = 0;
+    nu16_t identifier = 0;
+    nu16_t sequence = 0;
 
     echo_header();
+
+    // TODO: Could define cast operators for `::icmphdr` and `::icmp`,
+    // but for whom? What functions expect them?
 
     template <std::size_t N = 0>
     rbytes<N> data() const {

@@ -2,12 +2,11 @@
 #define NUPP_EXCEPTIONS_IP_HPP
 
 #include <nupp/bytes.hpp>
+#include <nupp/endian.hpp>
 #include <nupp/export.hpp>
-#include <nupp/exceptions/byteorder.hpp>
 
 #include <netinet/ip.h>
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <vector>
@@ -38,31 +37,19 @@ concept is_dynamic_type = is_dynamic_size<payload_traits<T>::size>;
 template <typename T>
 concept is_static_type = !is_dynamic_type<T>;
 
-/**
- * Uni-byte fields do not need a proxy.
- * Only multi-byte fields with a byte order,
- * or sub-byte fields with a bit mask, need a proxy.
- */
 // https://android.googlesource.com/platform/bionic/+/refs/heads/main/libc/include/netinet/ip.h#52
 struct header {
-    std::uint8_t _ihl: 4;
-    std::uint8_t _version: 4;
-    std::uint8_t service;
-    std::uint16_t _length;
-    std::uint16_t _id;
-    std::uint16_t _offset;
-    std::uint8_t ttl;
-    std::uint8_t protocol;
-    std::uint16_t _checksum;
-    std::uint32_t _source;
-    std::uint32_t _destination;
-
-    PROXY(std::uint16_t, length, _length)
-    PROXY(std::uint16_t, id, _id)
-    PROXY(std::uint16_t, offset, _offset)
-    PROXY(std::uint16_t, checksum, _checksum)
-    PROXY(std::uint32_t, source, _source)
-    PROXY(std::uint32_t, destination, _destination)
+    nu8_t ihl: 4;
+    nu8_t version: 4;
+    nu8_t service;
+    nu16_t length;
+    nu16_t id;
+    nu16_t offset;
+    nu8_t ttl;
+    nu8_t protocol;
+    nu16_t checksum;
+    nu32_t source;
+    nu32_t destination;
 };
 
 static_assert(sizeof(header) == 5 * 4);
@@ -70,12 +57,10 @@ static_assert(sizeof(header) == sizeof(::ip));
 
 template <std::size_t O = 0>
 requires is_static_size<O>
-class headerplus : public header {
-public:
+struct headerplus : public header {
     static constexpr std::size_t noptions = O;
 
-protected:
-    std::array<std::byte, noptions * 4> _options;
+    std::byte options[noptions * 4];
 };
 
 template <>

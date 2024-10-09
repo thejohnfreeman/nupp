@@ -1,5 +1,5 @@
-#ifndef NUPP_EXCEPTIONS_BYTEORDER_HPP
-#define NUPP_EXCEPTIONS_BYTEORDER_HPP
+#ifndef NUPP_ENDIAN_HPP
+#define NUPP_ENDIAN_HPP
 
 #include <nupp/export.hpp>
 
@@ -13,7 +13,6 @@
 #include <cstdint>
 
 namespace nupp {
-namespace exceptions {
 
 inline std::uint16_t ntoh(std::uint16_t x) {
     return ntohs(x);
@@ -72,6 +71,11 @@ big_endian<T>& operator+= (big_endian<T>& lhs, U const& rhs) {
 
 // TODO: More operators.
 
+template <typename T>
+auto format_as(big_endian<T> const& value) {
+    return fmt::to_string(value.native());
+}
+
 using beu16_t = big_endian<std::uint16_t>;
 static_assert(sizeof(beu16_t) == sizeof(std::uint16_t));
 static_assert(alignof(beu16_t) == alignof(std::uint16_t));
@@ -79,53 +83,16 @@ using beu32_t = big_endian<std::uint32_t>;
 static_assert(sizeof(beu32_t) == sizeof(std::uint32_t));
 static_assert(alignof(beu32_t) == alignof(std::uint32_t));
 
-template <typename T>
-auto format_as(big_endian<T> const& value) {
-    return fmt::to_string(value.native());
-}
-
 /**
- * A proxy for network byte order fields.
- * Holds a reference to a network byte order value.
- * Cast (read) and assignment (write) operators
- * convert to and from host byte order, resepectively.
+ * "n" prefix for "network order".
+ * Uni-byte fields do not need a proxy.
+ * Only multi-byte fields with a byte order,
+ * or sub-byte fields with a bit mask, need a proxy.
  */
-template <typename T>
-class proxy {
-private:
-    T& _x;
-public:
-    proxy(T& x) : _x(x) {}
-    // Forbid narrowing conversions.
-    template <typename U>
-    requires std::integral<U> && (sizeof(U) <= sizeof(T))
-    proxy& operator= (U rhs) {
-        _x = hton(rhs);
-        return *this;
-    }
-    T native() const {
-        return ntoh(_x);
-    }
-    operator T() const {
-        return native();
-    }
-    T raw() const {
-        return _x;
-    }
-    T& raw() {
-        return _x;
-    }
-};
+using nu8_t = std::uint8_t;
+using nu16_t = beu16_t;
+using nu32_t = beu32_t;
 
-#define PROXY(type, name, member) \
-    proxy<type> name() { \
-        return member; \
-    } \
-    proxy<type const> name() const { \
-        return member; \
-    } \
-
-}
 }
 
 #endif

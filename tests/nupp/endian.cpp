@@ -1,8 +1,9 @@
 #include <doctest/doctest.h>
 
-#include <nupp/exceptions/byteorder.hpp>
+#include <nupp/bytes.hpp>
+#include <nupp/endian.hpp>
 
-static bool operator== (std::span<std::byte const> lhs, std::initializer_list<std::byte const> rhs) {
+static bool operator== (nupp::rbytes<> lhs, std::initializer_list<std::byte const> rhs) {
     assert(lhs.size() == rhs.size());
     auto l = lhs.begin();
     auto r = rhs.begin();
@@ -19,7 +20,7 @@ static bool operator== (std::span<std::byte const> lhs, std::initializer_list<st
 TEST_SUITE_BEGIN("big_endian");
 
 TEST_CASE("beu16_t") {
-    using namespace nupp::exceptions;
+    using namespace nupp;
     beu16_t x;
     CHECK(x == 0);
     x = 0xABCD;

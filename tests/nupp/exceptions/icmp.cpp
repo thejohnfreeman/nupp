@@ -7,9 +7,10 @@ TEST_SUITE_BEGIN("icmp");
 TEST_CASE("checksum") {
     using namespace nupp::exceptions;
     auto message = icmp::echo_header{};
-    CHECK(message.sequence() == 0);
-    message.sequence() = message.sequence() + 1;
-    CHECK(message.sequence() == 1);
+    CHECK(message.sequence == 0);
+    message.sequence = message.sequence + 1;
+    CHECK(message.sequence == 1);
+    CHECK(message.sequence.raw() == 0x0100);
 }
 
 namespace {
