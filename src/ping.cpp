@@ -1,4 +1,4 @@
-#include <nupp/bytes_view.hpp>
+#include <nupp/bytes.hpp>
 #include <nupp/exceptions/address.hpp>
 #include <nupp/exceptions/icmp.hpp>
 

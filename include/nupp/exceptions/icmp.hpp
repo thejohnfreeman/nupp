@@ -1,7 +1,7 @@
 #ifndef NUPP_EXCEPTIONS_ICMP_HPP
 #define NUPP_EXCEPTIONS_ICMP_HPP
 
-#include <nupp/bytes_view.hpp>
+#include <nupp/bytes.hpp>
 #include <nupp/exceptions/address.hpp>
 #include <nupp/exceptions/byteorder.hpp>
 #include <nupp/exceptions/ip.hpp>

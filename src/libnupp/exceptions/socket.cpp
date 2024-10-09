@@ -38,7 +38,7 @@ socket_v4::option<std::uint8_t> socket_v4::ttl() {
 }
 
 std::size_t socket_v4::_send_to(
-    bytes_view const& data, address_v4 const& address, unsigned int flags
+    rbytes<> const& data, address_v4 const& address, unsigned int flags
 ) {
     auto sent = ::sendto(
         _fd, data.data(), data.size(), flags, address, sizeof(address)

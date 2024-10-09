@@ -6,7 +6,7 @@ namespace nupp {
 namespace exceptions {
 namespace ip {
 
-std::uint16_t checksum(bytes_view const& data) {
+std::uint16_t checksum(rbytes<> const& data) {
     /* Data comes in bytes (8-bits). We want half-words (16-bits). */
     auto size = data.size_bytes();
     assert(size % 2 == 0);

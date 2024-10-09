@@ -1,7 +1,7 @@
 #ifndef NUPP_EXCEPTIONS_IP_HPP
 #define NUPP_EXCEPTIONS_IP_HPP
 
-#include <nupp/bytes_view.hpp>
+#include <nupp/bytes.hpp>
 #include <nupp/export.hpp>
 #include <nupp/exceptions/byteorder.hpp>
 
@@ -19,7 +19,7 @@ namespace ip {
 /**
  * @return checksum in network byte order
  */
-NUPP_EXPORT std::uint16_t checksum(bytes_view const& data);
+NUPP_EXPORT std::uint16_t checksum(rbytes<> const& data);
 
 template <typename T>
 struct payload_traits {

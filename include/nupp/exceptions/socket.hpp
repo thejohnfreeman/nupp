@@ -1,14 +1,13 @@
 #ifndef NUPP_EXCEPTIONS_SOCKET_HPP
 #define NUPP_EXCEPTIONS_SOCKET_HPP
 
-#include <nupp/bytes_view.hpp>
+#include <nupp/bytes.hpp>
 #include <nupp/exceptions/address.hpp>
 #include <nupp/export.hpp>
 
 #include <sys/socket.h>
 
 #include <cassert>
-#include <cstddef> // byte
 #include <cstdint>
 #include <span>
 #include <system_error>
@@ -99,7 +98,7 @@ public:
      */
     void connect(address_v4 const& address);
 
-    std::size_t _send_to(bytes_view const& data, address_v4 const& address, unsigned int flags = 0);
+    std::size_t _send_to(rbytes<> const& data, address_v4 const& address, unsigned int flags = 0);
 
     template <typename T>
     std::size_t send_to(nupp::message<T>& data, address_v4 const& address, unsigned int flags = 0) {

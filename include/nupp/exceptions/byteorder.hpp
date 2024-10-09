@@ -3,6 +3,8 @@
 
 #include <nupp/export.hpp>
 
+#include <fmt/base.h>
+
 #include <arpa/inet.h>
 
 #include <bit>

@@ -1,5 +1,5 @@
-#ifndef NUPP_BYTES_VIEW_HPP
-#define NUPP_BYTES_VIEW_HPP
+#ifndef NUPP_BYTES_HPP
+#define NUPP_BYTES_HPP
 
 #include <nupp/export.hpp>
 
@@ -16,9 +16,13 @@
 namespace nupp {
 
 // Read-only byte sequence.
+// `std::span` is missing comparison operators,
+// which makes us define our own,
+// but it is also missing stream operators,
+// which _lets_ us define our own.
+// https://www.reddit.com/r/cpp/comments/fg79hm/differences_between_stdstring_view_and_stdspan/
 template <std::size_t N = std::dynamic_extent>
 using rbytes = std::span<std::byte const, N>;
-using bytes_view = rbytes<>;
 
 // Writeable byte sequence.
 template <std::size_t N = std::dynamic_extent>
@@ -131,21 +135,18 @@ private:
 
 namespace std {
 
-NUPP_EXPORT std::ostream& operator<< (std::ostream& out, nupp::bytes_view const& bv);
+NUPP_EXPORT std::ostream& operator<< (std::ostream& out, nupp::rbytes<> const& bv);
 
 template <typename T>
-requires std::convertible_to<T, nupp::bytes_view>
+requires std::convertible_to<T, nupp::rbytes<>>
 std::ostream& operator<< (std::ostream& out, T const& object) {
-    return out << static_cast<nupp::bytes_view const&>(object);
+    return out << static_cast<nupp::rbytes<> const&>(object);
 }
 
 }
 
 template <std::size_t N>
 struct NUPP_EXPORT fmt::formatter<nupp::rbytes<N>> : public ostream_formatter {};
-
-template <>
-struct NUPP_EXPORT fmt::formatter<nupp::bytes_view> : public ostream_formatter {};
 
 template <std::size_t N>
 struct NUPP_EXPORT fmt::formatter<nupp::wbytes<N>> : public ostream_formatter {};
