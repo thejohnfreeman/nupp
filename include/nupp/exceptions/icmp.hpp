@@ -16,11 +16,17 @@ namespace nupp {
 namespace exceptions {
 namespace icmp {
 
+enum class message_type_t : std::uint8_t {
+    ECHO_REPLY = 0,
+    ECHO = 8,
+};
+static_assert(sizeof(message_type_t) == sizeof(nu8_t));
+
 /**
  * @see https://datatracker.ietf.org/doc/html/rfc792
  */
 struct NUPP_EXPORT message {
-    nu8_t type;
+    message_type_t type;
     nu8_t code;
     nu16_t checksum = 0;
 };

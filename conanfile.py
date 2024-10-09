@@ -32,7 +32,7 @@ class Nupp(ConanFile):
 
     requires = [
         # Available at https://conan.jfreeman.dev
-        'cupcake.cmake/1.1.1@github/thejohnfreeman',
+        'cupcake.cmake/1.1.2@github/thejohnfreeman',
     ]
     generators = ['CMakeDeps', 'CMakeToolchain']
 
