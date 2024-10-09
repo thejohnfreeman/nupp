@@ -13,7 +13,7 @@ namespace icmp {
 ASSERT_EQ(message_type_t::ECHO_REPLY, ICMP_ECHOREPLY);
 ASSERT_EQ(message_type_t::ECHO, ICMP_ECHO);
 
-echo_header::echo_header() : message{message_type_t::ECHO, /*code=*/0} {}
+echo::echo() : header{message_type_t::ECHO, /*code=*/0} {}
 
 }
 }

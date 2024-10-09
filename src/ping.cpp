@@ -52,13 +52,13 @@ void onsignal(int signal) {
 
 constexpr std::size_t TOTAL_SIZE = 84;
 constexpr std::size_t ICMP_SIZE = TOTAL_SIZE - sizeof(ip::header);
-constexpr std::size_t DATA_SIZE = ICMP_SIZE - sizeof(icmp::echo_header);
+constexpr std::size_t DATA_SIZE = ICMP_SIZE - sizeof(icmp::echo);
 
 // Send a statically-sized message of direct type.
 struct sender1 {
-    icmp::echo<DATA_SIZE> outgoing;
+    icmp::echo_fixed<DATA_SIZE> outgoing;
 
-    icmp::echo_header& body = outgoing;
+    icmp::echo& body = outgoing;
     auto send(socket_v4& socket, address_v4 const& dest) {
         return socket.send_to(outgoing, dest);
     }
@@ -67,10 +67,10 @@ struct sender1 {
 // Send a dynamically-sized message of indirect type.
 struct sender2 {
     std::byte buffer[1024] = {};
-    nupp::message<icmp::echo_header> outgoing
-        = nupp::message<icmp::echo_header>::construct(buffer, ICMP_SIZE);
+    nupp::message<icmp::echo> outgoing
+        = nupp::message<icmp::echo>::construct(buffer, ICMP_SIZE);
 
-    icmp::echo_header& body = *outgoing;
+    icmp::echo& body = *outgoing;
     auto send(socket_v4& socket, address_v4 const& dest) {
         return socket.send_to(outgoing, dest);
     }
@@ -78,9 +78,9 @@ struct sender2 {
 
 // Overwrite a statically-sized message of direct type.
 struct receiver1 {
-    icmp::echo<DATA_SIZE> incoming;
+    icmp::echo_fixed<DATA_SIZE> incoming;
 
-    icmp::echo_header* body = &incoming;
+    icmp::echo* body = &incoming;
     auto receive(socket_v4& socket, address_v4& src) {
         return socket.receive_from(incoming, src);
     }
@@ -89,10 +89,10 @@ struct receiver1 {
 // Overwrite a dynamically-sized message of indirect type.
 struct receiver2 {
     std::byte buffer[1024] = {};
-    nupp::message<icmp::echo_header> incoming
-        = nupp::message<icmp::echo_header>::interpret(buffer, ICMP_SIZE);
+    nupp::message<icmp::echo> incoming
+        = nupp::message<icmp::echo>::interpret(buffer, ICMP_SIZE);
 
-    icmp::echo_header* body = incoming;
+    icmp::echo* body = incoming;
     auto receive(socket_v4& socket, address_v4& src) {
         return socket.receive_from(incoming, src);
     }
@@ -104,10 +104,10 @@ struct receiver2 {
 struct receiver3 {
     std::byte buffer[1024] = {};
 
-    icmp::echo_header* body = nullptr;
+    icmp::echo* body = nullptr;
     auto receive(socket_v4& socket, address_v4& src) {
         // nupp::message must be non-null.
-        auto incoming = socket.receive_from<icmp::echo_header>(buffer, src);
+        auto incoming = socket.receive_from<icmp::echo>(buffer, src);
         body = incoming;
         return incoming.size();
     }
