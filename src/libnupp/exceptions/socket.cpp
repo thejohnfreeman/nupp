@@ -9,8 +9,9 @@
 namespace nupp {
 namespace exceptions {
 
-socket_v4::socket_v4(int type, int protocol) {
-    _fd = ::socket(AF_INET, type, protocol);
+socket_v4::socket_v4(socket_type_t type, socket_protocol_t protocol) {
+    // C++23: std::to_underlying
+    _fd = ::socket(AF_INET, static_cast<int>(type), static_cast<int>(protocol));
     if (_fd == -1) {
         // TODO: is this the same as `strerror`?
         throw std::system_error(errno, std::system_category());
@@ -65,16 +66,20 @@ std::size_t socket_v4::_receive_from(
     return received;
 }
 
+socket_v4 socket_v4::raw(socket_protocol_t protocol) {
+    return socket_v4(socket_type_t::RAW, protocol);
+}
+
 socket_v4 socket_v4::icmp() {
-    return socket_v4(/*type=*/SOCK_DGRAM, /*protocol=*/IPPROTO_ICMP);
+    return socket_v4(socket_type_t::DATAGRAM, socket_protocol_t::ICMP);
 }
 
 socket_v4 socket_v4::tcp() {
-    return socket_v4(/*type=*/SOCK_STREAM, /*protocol=*/IPPROTO_TCP);
+    return socket_v4(socket_type_t::STREAM, socket_protocol_t::TCP);
 }
 
 socket_v4 socket_v4::udp() {
-    return socket_v4(/*type=*/SOCK_DGRAM, /*protocol=*/IPPROTO_UDP);
+    return socket_v4(socket_type_t::DATAGRAM, socket_protocol_t::UDP);
 }
 
 }

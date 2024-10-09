@@ -33,6 +33,18 @@ void before_send(T& data) {
 
 }
 
+enum class socket_type_t : int {
+    DATAGRAM = SOCK_DGRAM,
+    RAW = SOCK_RAW,
+    STREAM = SOCK_STREAM,
+};
+
+enum class socket_protocol_t : int {
+    ICMP = IPPROTO_ICMP,
+    TCP = IPPROTO_TCP,
+    UDP = IPPROTO_UDP,
+};
+
 /**
  * An IPv4 socket.
  *
@@ -66,11 +78,9 @@ public:
     class option;
 
     /**
-     * @param type e.g. `SOCK_STREAM` or `SOCK_DGRAM`.
-     * @param protocol e.g. `IPPROTO_ICMP` or `IPPROTO_TCP`.
      * @throws std::system_error
      */
-    socket_v4(int type, int protocol);
+    socket_v4(socket_type_t type, socket_protocol_t protocol);
     ~socket_v4();
 
     int fd() const {
@@ -132,6 +142,7 @@ public:
         return _receive_from(to_bytes(data), address, flags);
     }
 
+    static socket_v4 raw(socket_protocol_t protocol);
     static socket_v4 icmp();
     static socket_v4 tcp();
     static socket_v4 udp();
