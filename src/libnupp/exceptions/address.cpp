@@ -2,10 +2,12 @@
 
 #include <fmt/format.h>
 
+#include <arpa/inet.h> // inet_pton
 #include <netdb.h>
 #include <netinet/in.h>
 
 #include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <string>
 #include <system_error>
@@ -58,13 +60,20 @@ address_v4 address_v4::from(std::uint32_t addr32) {
 
 address_v4 address_v4::of(char const* hostname) {
     addrinfo* result = nullptr;
-    int errc = ::getaddrinfo(hostname, /*serv=*/nullptr, /*hints=*/nullptr, &result);
-    if (errc) {
+    if (int errc = ::getaddrinfo(hostname, /*serv=*/nullptr, /*hints=*/nullptr, &result)) {
         throw std::system_error(errc, the_address_error_category);
     }
     assert(result);
     address_v4 address;
     address = *result->ai_addr;
+    return address;
+}
+
+address_v4 address_v4::parse(char const* notation) {
+    address_v4 address;
+    if (int errc = ::inet_pton(AF_INET, notation, &address); !errc) {
+        throw std::runtime_error("not an address");
+    }
     return address;
 }
 

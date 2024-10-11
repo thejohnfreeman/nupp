@@ -43,6 +43,7 @@ public:
      * @throws std::system_error
      */
     static address_v4 of(char const* hostname);
+    static address_v4 parse(char const* notation);
     static address_v4 any();
 };
 
