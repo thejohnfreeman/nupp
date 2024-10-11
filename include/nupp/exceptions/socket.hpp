@@ -45,6 +45,8 @@ enum class socket_protocol_t : int {
     UDP = IPPROTO_UDP,
 };
 
+using protocols = socket_protocol_t;
+
 /**
  * An IPv4 socket.
  *

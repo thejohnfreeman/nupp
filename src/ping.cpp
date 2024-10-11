@@ -59,7 +59,7 @@ int main(int argc, const char** argv) {
 
     auto dest = address_v4::of(destname);
 
-    auto socket = socket_v4::icmp();
+    auto socket = socket_v4::raw(protocols::ICMP);
     socket.ttl() = 255;
 
     socket.bind();
@@ -72,7 +72,7 @@ int main(int argc, const char** argv) {
         exit(EXIT_FAILURE);
     }
 
-    /* Construct ICMP header. */
+    /* Construct ICMP message. */
     icmp::echo_fixed<DATA_SIZE> outgoing;
 
     // Narrowing conversion from 32 to 16 bits.
@@ -94,15 +94,15 @@ int main(int argc, const char** argv) {
         /* Receive. */
         address_v4 src;
         std::byte buffer[1024] = {};
-        auto incoming = socket.receive_from<icmp::echo>(buffer, src);
+        auto incoming = socket.receive_from<ip::header>(buffer, src);
         auto recvbytes = incoming.size();
 
         ++nrecv;
 
         /* Verify. */
-        assert(incoming->type == icmp::message_type_t::ECHO_REPLY);
-        assert(incoming->code == 0);
-        assert(incoming->sequence == outgoing.sequence);
+        assert(incoming->message<icmp::echo>().type == icmp::message_type_t::ECHO_REPLY);
+        assert(incoming->message<icmp::echo>().code == 0);
+        assert(incoming->message<icmp::echo>().sequence == outgoing.sequence);
 
         /* Stop timer. */
         auto stop = last = std::chrono::steady_clock::now();
@@ -115,8 +115,8 @@ int main(int argc, const char** argv) {
 
         /* Print. */
         fmt::println(
-                "{} bytes from {} ({}): icmp_seq={} ttl=xx time={:.2f} ms",
-                sendbytes, src.name(), src, outgoing.sequence, ms);
+                "{} bytes from {} ({}): icmp_seq={} ttl={} time={:.2f} ms",
+                sendbytes, src.name(), src, outgoing.sequence, incoming->ttl, ms);
 
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(1s);

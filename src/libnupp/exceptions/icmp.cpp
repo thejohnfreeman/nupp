@@ -6,6 +6,9 @@ namespace nupp {
 namespace exceptions {
 namespace icmp {
 
+// ::icmphdr tries to represent all ICMP message types with a union.
+static_assert(sizeof(echo) == sizeof(::icmphdr));
+
 // C++23: std::to_underlying()
 #define ASSERT_EQ(lhs, rhs) \
     static_assert(static_cast<std::underlying_type_t<message_type_t>>(lhs) == rhs)
