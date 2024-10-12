@@ -51,7 +51,7 @@ int main(int argc, const char** argv) {
 
     /* Parse command line. */
     if (argc != 2) {
-        fmt::println("usage: ping host");
+        fmt::println("usage: {} host", argv[0]);
         std::exit(EXIT_FAILURE);
     }
 
@@ -73,11 +73,11 @@ int main(int argc, const char** argv) {
     }
 
     /* Construct ICMP message. */
-    icmp::echo_fixed<DATA_SIZE> outgoing;
+    icmp::echo_fixed<DATA_SIZE> request;
 
     // Narrowing conversion from 32 to 16 bits.
-    outgoing.identifier = static_cast<std::uint16_t>(getpid());
-    outgoing.sequence = 1;
+    request.identifier = static_cast<std::uint16_t>(getpid());
+    request.sequence = 1;
 
     fmt::println(
             "PING {} ({}) {}({}) bytes of data.",
@@ -88,21 +88,21 @@ int main(int argc, const char** argv) {
         auto start = std::chrono::steady_clock::now();
 
         /* Send. */
-        auto sendbytes = socket.send_to(outgoing, dest);
+        auto sendbytes = socket.send_to(request, dest);
         ++nsent;
 
         /* Receive. */
         address_v4 src;
         std::byte buffer[1024] = {};
-        auto incoming = socket.receive_from<ip::header>(buffer, src);
-        auto recvbytes = incoming.size();
+        auto response = socket.receive_from<ip::header>(buffer, src);
+        auto recvbytes = response.size();
 
         ++nrecv;
 
         /* Verify. */
-        assert(incoming->message<icmp::echo>().type == icmp::message_type_t::ECHO_REPLY);
-        assert(incoming->message<icmp::echo>().code == 0);
-        assert(incoming->message<icmp::echo>().sequence == outgoing.sequence);
+        assert(response->message<icmp::echo>().type == icmp::message_type_t::ECHO_REPLY);
+        assert(response->message<icmp::echo>().code == 0);
+        assert(response->message<icmp::echo>().sequence == request.sequence);
 
         /* Stop timer. */
         auto stop = last = std::chrono::steady_clock::now();
@@ -116,11 +116,11 @@ int main(int argc, const char** argv) {
         /* Print. */
         fmt::println(
                 "{} bytes from {} ({}): icmp_seq={} ttl={} time={:.2f} ms",
-                sendbytes, src.name(), src, outgoing.sequence, incoming->ttl, ms);
+                sendbytes, src.name(), src, request.sequence, response->ttl, ms);
 
         using namespace std::chrono_literals;
         std::this_thread::sleep_for(1s);
-        outgoing.sequence += 1;
+        request.sequence += 1;
     }
 
     return EXIT_SUCCESS;
