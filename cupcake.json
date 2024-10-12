@@ -60,6 +60,12 @@
         "${PROJECT_NAME}.imports.main",
         "${PROJECT_NAME}.libraries.nupp"
       ]
+    },
+    {
+      "name": "traceroute",
+      "links": [
+        "${PROJECT_NAME}.imports.main"
+      ]
     }
   ]
 }
