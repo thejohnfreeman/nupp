@@ -40,6 +40,7 @@ public:
      */
     static address_v4 from(std::uint32_t addr32);
     /**
+     * Parses dot notation or domain name.
      * @throws std::system_error
      */
     static address_v4 of(char const* hostname);

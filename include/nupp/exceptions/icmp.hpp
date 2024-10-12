@@ -74,6 +74,10 @@ struct echo_fixed : public echo {
     std::byte data[N];
 };
 
+template <>
+struct echo_fixed<0> : public echo {
+};
+
 static_assert(std::is_trivially_destructible_v<echo_fixed<8>>);
 
 template <typename T>
