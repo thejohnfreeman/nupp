@@ -131,6 +131,78 @@ private:
 
 };
 
+struct NUPP_EXPORT pretty_printer {
+    nupp::rbytes<> bytes;
+};
+
+template <typename T>
+struct NUPP_EXPORT field {
+    fmt::format_string<T> fstring;
+};
+
+struct NUPP_EXPORT end {};
+
+namespace detail {
+
+struct NUPP_EXPORT pretty_printing {
+    nupp::rbytes<> bytes;
+    std::ostream& out;
+    mutable std::size_t index = 0;
+
+    void intro() const;
+    void line() const;
+    void print(char* buffer, std::size_t nbytes) const;
+    std::ostream& outro() const;
+};
+
+/** Maximum width of a formatted description. */
+template <std::size_t N> struct NUPP_EXPORT field_width;
+template <> struct NUPP_EXPORT field_width< 8> { static constexpr std::size_t WIDTH = 9; };
+template <> struct NUPP_EXPORT field_width<16> { static constexpr std::size_t WIDTH = 21; };
+template <> struct NUPP_EXPORT field_width<32> { static constexpr std::size_t WIDTH = 45; };
+
+template <typename T>
+struct NUPP_EXPORT field_traits {
+    using value_type = T;
+    static constexpr std::size_t NBYTES = sizeof(T) / sizeof(std::uint8_t);
+    static constexpr std::size_t NBITS = NBYTES << 3;
+    static constexpr std::size_t WIDTH = field_width<NBITS>::WIDTH;
+};
+
+template <typename... T>
+static char* cformat(char* out, fmt::format_string<T...> fmt, T&&... args) {
+    auto end = fmt::format_to(out, fmt, std::forward<T>(args)...);
+    *end = 0;
+    return end;
+}
+
+template <typename T>
+pretty_printing const& operator<< (pretty_printing const& pp, field<T> const& f) {
+    using trait = detail::field_traits<T>;
+    T const& value = *reinterpret_cast<T const*>(pp.bytes.data() + pp.index);
+    char buffer1[trait::WIDTH + 1];
+    // TODO: Null-terminated C-strings or std::string_views?
+    auto end = detail::cformat(buffer1, fmt::runtime(f.fstring), fmt::arg("value", value));
+    // TODO: replace with better exception
+    assert(end - buffer1 <= trait::WIDTH);
+    char buffer2[trait::WIDTH + 3 + 1];
+    detail::cformat(buffer2, "| {:^{}} ", buffer1, trait::WIDTH);
+    pp.print(buffer2, trait::NBYTES);
+    return pp;
+}
+
+inline std::ostream& operator<< (pretty_printing const& pp, end const&) {
+    return pp.outro();
+}
+
+}
+
+inline detail::pretty_printing operator<< (std::ostream& out, pretty_printer const& pp) {
+    detail::pretty_printing ppp{pp.bytes, out};
+    ppp.intro();
+    return ppp;
+}
+
 }
 
 namespace std {

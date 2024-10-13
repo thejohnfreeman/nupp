@@ -1,12 +1,12 @@
 #ifndef NUPP_EXCEPTIONS_ADDRESS_HPP
 #define NUPP_EXCEPTIONS_ADDRESS_HPP
 
+#include <nupp/bytes.hpp>
 #include <nupp/export.hpp>
 
 #include <fmt/format.h>
 
-#include <sys/socket.h>
-#include <netdb.h>
+#include <netinet/in.h>
 
 #include <cstdint>
 #include <string>
@@ -17,11 +17,22 @@ namespace nupp {
 namespace exceptions {
 
 /**
+ * An `address32` wraps a 32-bit IPv4 address in network byte order (big-endian).
+ */
+struct NUPP_EXPORT address32 {
+    std::uint8_t octets[4];
+};
+
+inline auto format_as(address32 address) {
+    auto const& oct = address.octets;
+    return fmt::format("{}.{}.{}.{}", oct[0], oct[1], oct[2], oct[3]);
+}
+
+/**
  * An `address_v4` _is_ a `sockaddr_in`
  * so that it can be passed to the same functions.
  */
-class NUPP_EXPORT address_v4 : public sockaddr_in {
-public:
+struct NUPP_EXPORT address_v4 : public sockaddr_in {
     address_v4();
     address_v4& operator= (sockaddr const& rhs);
 
@@ -51,8 +62,8 @@ public:
 static_assert(sizeof(address_v4) == sizeof(sockaddr_in));
 
 inline auto format_as(address_v4 const& address) {
-    std::uint8_t const* octs = reinterpret_cast<std::uint8_t const*>(&address.sin_addr.s_addr);
-    return fmt::format("{}.{}.{}.{}", octs[0], octs[1], octs[2], octs[3]);
+    address32 const* addr = pointer_cast<address32>(&address.sin_addr.s_addr);
+    return fmt::format("{}", *addr);
 }
 
 }
