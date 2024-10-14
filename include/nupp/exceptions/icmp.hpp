@@ -34,11 +34,15 @@ struct NUPP_EXPORT header {
 
 static_assert(std::is_trivially_destructible_v<header>);
 
-pretty_printing const& operator<< (pretty_printing const& pp, fields<icmp::header>) {
-    return pp
+inline pstream const& operator<< (pstream const& out, header const*) {
+    return out
         << field<nu8_t>("type")
         << field<nu8_t>("code")
         << field<nu16_t>("checksum");
+}
+
+inline std::ostream& operator<< (std::ostream& out, header const& rhs) {
+    return out << pretty_printer{rhs} << &rhs << end{};
 }
 
 struct NUPP_EXPORT echo : public header {
@@ -76,15 +80,15 @@ struct NUPP_EXPORT echo : public header {
 
 static_assert(std::is_trivially_destructible_v<echo>);
 
-pretty_printing const& operator<< (pretty_printing const& pp, fields<icmp::echo>) {
-    return pp
-        << fields<icmp::header>{}
+inline pstream const& operator<< (pstream const& out, echo const*) {
+    return out
+        << fields<header>{}
         << field<nu16_t>("identifier")
         << field<nu16_t>("sequence");
 }
 
-std::ostream& operator<< (std::ostream& out, icmp::echo const& rhs) {
-    return out << pretty_printer{rhs} << fields<icmp::echo>{} << end{};
+inline std::ostream& operator<< (std::ostream& out, echo const& rhs) {
+    return out << pretty_printer{rhs} << &rhs << end{};
 }
 
 template <std::size_t N = 0>

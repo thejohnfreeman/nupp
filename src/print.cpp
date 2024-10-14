@@ -60,7 +60,7 @@ int main(int argc, const char** argv) {
 
     {
         ip::packet<icmp::echo_fixed<8>> request;
-        // std::cout << request;
+        std::cout << request;
     }
 
     return 0;

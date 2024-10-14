@@ -147,11 +147,14 @@ struct NUPP_EXPORT field {
 };
 
 template <typename T>
-struct NUPP_EXPORT fields {};
+struct NUPP_EXPORT fields {
+    T const* address = nullptr;
+    operator T const* () const { return address; }
+};
 
 struct NUPP_EXPORT end {};
 
-struct NUPP_EXPORT pretty_printing {
+struct NUPP_EXPORT pstream {
     nupp::rbytes<> bytes;
     std::ostream& out;
     mutable std::size_t index = 0;
@@ -188,9 +191,9 @@ static char* cformat(char* out, fmt::format_string<T...> fmt, T&&... args) {
 }
 
 template <typename T>
-pretty_printing const& operator<< (pretty_printing const& pp, field<T> const& f) {
+pstream const& operator<< (pstream const& out, field<T> const& f) {
     using trait = detail::field_traits<T>;
-    T const& value = *reinterpret_cast<T const*>(pp.bytes.data() + pp.index);
+    T const& value = *reinterpret_cast<T const*>(out.bytes.data() + out.index);
     char buffer1[trait::WIDTH + 1];
     // TODO: Null-terminated C-strings or std::string_views?
     auto end = detail::cformat(buffer1, fmt::runtime(f.fstring), fmt::arg("value", value));
@@ -198,18 +201,18 @@ pretty_printing const& operator<< (pretty_printing const& pp, field<T> const& f)
     assert(end - buffer1 <= trait::WIDTH);
     char buffer2[trait::WIDTH + 3 + 1];
     detail::cformat(buffer2, "| {:^{}} ", buffer1, trait::WIDTH);
-    pp.print(buffer2, trait::NBYTES);
-    return pp;
+    out.print(buffer2, trait::NBYTES);
+    return out;
 }
 
-inline std::ostream& operator<< (pretty_printing const& pp, end) {
-    return pp.outro();
+inline std::ostream& operator<< (pstream const& out, end) {
+    return out.outro();
 }
 
-inline pretty_printing operator<< (std::ostream& out, pretty_printer const& pp) {
-    pretty_printing ppp{pp.bytes, out};
-    ppp.intro();
-    return ppp;
+inline pstream operator<< (std::ostream& out, pretty_printer const& pp) {
+    pstream pout{pp.bytes, out};
+    pout.intro();
+    return pout;
 }
 
 }

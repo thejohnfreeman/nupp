@@ -4,6 +4,7 @@
 #include <nupp/bytes.hpp>
 #include <nupp/endian.hpp>
 #include <nupp/export.hpp>
+#include <nupp/exceptions/address.hpp>
 
 #include <netinet/ip.h>
 
@@ -105,6 +106,24 @@ static_assert(std::is_trivially_destructible_v<header>);
 static_assert(sizeof(header) == 5 * sizeof(std::uint32_t));
 static_assert(sizeof(header) == sizeof(::ip));
 
+inline pstream const& operator<< (pstream const& out, header const*) {
+    return out
+        << field<nu8_t>("VER / IHL")
+        << field<nu8_t>("DSCP /ECN")
+        << field<nu16_t>("length = {}")
+        << field<nu16_t>("identification")
+        << field<nu16_t>("flg / fragment offset")
+        << field<nu8_t>("TTL")
+        << field<nu8_t>("protocol")
+        << field<nu16_t>("checksum")
+        << field<address32>("source address ({})")
+        << field<address32>("destination address ({})");
+}
+
+inline std::ostream& operator<< (std::ostream& out, header const& rhs) {
+    return out << pretty_printer{rhs} << &rhs << end{};
+}
+
 template <std::size_t O = 0>
 requires (O <= MAXIMUM_OPTIONS_SIZE)
 struct NUPP_EXPORT header_fixed : public header {
@@ -127,6 +146,16 @@ requires (O <= MAXIMUM_OPTIONS_SIZE)
 struct NUPP_EXPORT packet : public header_fixed<O> {
     T payload;
 };
+
+template <typename T>
+inline pstream const& operator<< (pstream const& out, packet<T, 0> const* rhs) {
+    return out << fields<header>{rhs} << fields<T>{&rhs->payload};
+}
+
+template <typename T>
+inline std::ostream& operator<< (std::ostream& out, packet<T, 0> const& rhs) {
+    return out << pretty_printer{rhs} << &rhs << end{};
+}
 
 }
 }

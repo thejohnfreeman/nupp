@@ -31,13 +31,13 @@ static char const* const NIBBLES[] = {
     "1111 ",
 };
 
-void pretty_printing::intro() const {
+void pstream::intro() const {
     auto addr = reinterpret_cast<std::uintptr_t>(bytes.data());
     out << fmt::format("0x{:x}....\n", addr >> 16);
     out << HEADER;
 }
 
-void pretty_printing::line() const {
+void pstream::line() const {
     // TODO: Parameterize NCOLS.
     constexpr std::size_t const NCOLS = 4;
     auto it = bytes.begin() + index;
@@ -60,7 +60,7 @@ void pretty_printing::line() const {
     out << "|\n";
 }
 
-void pretty_printing::print(char* buffer, std::size_t nbytes) const {
+void pstream::print(char* buffer, std::size_t nbytes) const {
     // TODO: replace with better exceptions
     assert(4 - (index % 4) >= nbytes);
     assert(bytes.size() - index >= nbytes);
@@ -75,7 +75,7 @@ void pretty_printing::print(char* buffer, std::size_t nbytes) const {
         out << POSTFIX;
 }
 
-std::ostream& pretty_printing::outro() const {
+std::ostream& pstream::outro() const {
     if (index % 4 != 0) {
         // Finish line-in-progress.
         auto remainder = 4 - (index % 4);
