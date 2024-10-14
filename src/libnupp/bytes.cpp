@@ -3,7 +3,6 @@
 #include <cstdint>
 
 namespace nupp {
-namespace detail {
 
 static char const* const HEADER = "     |     0     |     1     |     2     |     3     |\n";
 static char const* const HLINE  = "     +-----------------------------------------------+\n";
@@ -95,7 +94,6 @@ std::ostream& pretty_printing::outro() const {
     return out;
 }
 
-}
 }
 
 namespace std {

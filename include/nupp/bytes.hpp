@@ -39,6 +39,10 @@ U* pointer_cast(T* p) {
     return static_cast<U*>(static_cast<void*>(p));
 }
 
+inline auto to_bytes(rbytes<> const& bytes) {
+    return bytes;
+}
+
 template <typename T>
 auto to_bytes(T const& object) {
     return rbytes<sizeof(T)>(pointer_cast<std::byte>(&object), sizeof(T));
@@ -133,6 +137,8 @@ private:
 
 struct NUPP_EXPORT pretty_printer {
     nupp::rbytes<> bytes;
+    template <typename T>
+    pretty_printer(T const& object) : bytes(to_bytes(object)) {}
 };
 
 template <typename T>
@@ -140,9 +146,10 @@ struct NUPP_EXPORT field {
     fmt::format_string<T> fstring;
 };
 
-struct NUPP_EXPORT end {};
+template <typename T>
+struct NUPP_EXPORT fields {};
 
-namespace detail {
+struct NUPP_EXPORT end {};
 
 struct NUPP_EXPORT pretty_printing {
     nupp::rbytes<> bytes;
@@ -154,6 +161,8 @@ struct NUPP_EXPORT pretty_printing {
     void print(char* buffer, std::size_t nbytes) const;
     std::ostream& outro() const;
 };
+
+namespace detail {
 
 /** Maximum width of a formatted description. */
 template <std::size_t N> struct NUPP_EXPORT field_width;
@@ -176,6 +185,8 @@ static char* cformat(char* out, fmt::format_string<T...> fmt, T&&... args) {
     return end;
 }
 
+}
+
 template <typename T>
 pretty_printing const& operator<< (pretty_printing const& pp, field<T> const& f) {
     using trait = detail::field_traits<T>;
@@ -191,14 +202,12 @@ pretty_printing const& operator<< (pretty_printing const& pp, field<T> const& f)
     return pp;
 }
 
-inline std::ostream& operator<< (pretty_printing const& pp, end const&) {
+inline std::ostream& operator<< (pretty_printing const& pp, end) {
     return pp.outro();
 }
 
-}
-
-inline detail::pretty_printing operator<< (std::ostream& out, pretty_printer const& pp) {
-    detail::pretty_printing ppp{pp.bytes, out};
+inline pretty_printing operator<< (std::ostream& out, pretty_printer const& pp) {
+    pretty_printing ppp{pp.bytes, out};
     ppp.intro();
     return ppp;
 }

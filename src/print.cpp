@@ -1,10 +1,10 @@
 #include <nupp/bytes.hpp>
 #include <nupp/endian.hpp>
 #include <nupp/exceptions/address.hpp>
+#include <nupp/exceptions/icmp.hpp>
+#include <nupp/exceptions/ip.hpp>
 
 #include <fmt/base.h>
-
-#include <netinet/ip_icmp.h>
 
 #include <cassert>
 #include <cstddef>
@@ -38,17 +38,30 @@ int main(int argc, const char** argv) {
     // fmt::println("The answer is unknown.", fmt::arg("answer", 42));
     // fmt::println("The answer is unknown.", 42);
 
-    unsigned char buffer[17] = "abc\0efghijkl";
+    // unsigned char buffer[17] = "abc\0efghijkl";
+    // std::cout
+    //     << nupp::pretty_printer{nupp::to_bytes(buffer)}
+    //     << nupp::field<nupp::nu8_t>("VER / IHL")
+    //     << nupp::field<nupp::nu8_t>("DSCP /ECN")
+    //     << nupp::field<nupp::nu16_t>("length ({})")
+    //     << nupp::field<nupp::nu16_t>("identification")
+    //     << nupp::field<nupp::nu16_t>("flg / fragment offset")
+    //     << nupp::field<nupp::exceptions::address32>("source address ({})")
+    //     << nupp::end{};
 
-    std::cout
-        << nupp::pretty_printer{nupp::to_bytes(buffer)}
-        << nupp::field<nupp::nu8_t>("VER / IHL")
-        << nupp::field<nupp::nu8_t>("DSCP /ECN")
-        << nupp::field<nupp::nu16_t>("length ({})")
-        << nupp::field<nupp::nu16_t>("identification")
-        << nupp::field<nupp::nu16_t>("flg / fragment offset")
-        << nupp::field<nupp::exceptions::address32>("source address ({})")
-        << nupp::end{};
+    using namespace nupp::exceptions;
+
+    {
+        icmp::echo_fixed<8> request;
+        request.identifier = 123;
+        request.sequence = 1;
+        std::cout << request;
+    }
+
+    {
+        ip::packet<icmp::echo_fixed<8>> request;
+        // std::cout << request;
+    }
 
     return 0;
 }

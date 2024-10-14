@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <ostream>
 #include <type_traits>
 
 namespace nupp {
@@ -32,6 +33,13 @@ struct NUPP_EXPORT header {
 };
 
 static_assert(std::is_trivially_destructible_v<header>);
+
+pretty_printing const& operator<< (pretty_printing const& pp, fields<icmp::header>) {
+    return pp
+        << field<nu8_t>("type")
+        << field<nu8_t>("code")
+        << field<nu16_t>("checksum");
+}
 
 struct NUPP_EXPORT echo : public header {
     nu16_t identifier = 0;
@@ -68,10 +76,21 @@ struct NUPP_EXPORT echo : public header {
 
 static_assert(std::is_trivially_destructible_v<echo>);
 
+pretty_printing const& operator<< (pretty_printing const& pp, fields<icmp::echo>) {
+    return pp
+        << fields<icmp::header>{}
+        << field<nu16_t>("identifier")
+        << field<nu16_t>("sequence");
+}
+
+std::ostream& operator<< (std::ostream& out, icmp::echo const& rhs) {
+    return out << pretty_printer{rhs} << fields<icmp::echo>{} << end{};
+}
+
 template <std::size_t N = 0>
 struct echo_fixed : public echo {
     // sizeof(std::array<std::byte, N>) != sizeof(std::byte[N]) == N
-    std::byte data[N];
+    std::byte data[N] = {};
 };
 
 template <>

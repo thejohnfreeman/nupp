@@ -120,7 +120,6 @@ public:
     static constexpr std::size_t noptions = 0;
     // Exclude the `options` member
     // or else it will consume bytes for a unique address.
-    header_fixed() : header(5 + noptions) {}
 };
 
 template <typename T, std::size_t O = 0>
